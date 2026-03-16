@@ -1,0 +1,11 @@
+<Solution>
+  <Folder Name="/src/">
+    <Project Path="src/RenathiaCrochet.API/RenathiaCrochet.API.csproj" />
+    <Project Path="src/RenathiaCrochet.Application/RenathiaCrochet.Application.csproj" />
+    <Project Path="src/RenathiaCrochet.Domain/RenathiaCrochet.Domain.csproj" />
+    <Project Path="src/RenathiaCrochet.Infrastructure/RenathiaCrochet.Infrastructure.csproj" />
+  </Folder>
+  <Folder Name="/tests/">
+    <Project Path="tests/RenathiaCrochet.Tests/RenathiaCrochet.Tests.csproj" />
+  </Folder>
+</Solution>
