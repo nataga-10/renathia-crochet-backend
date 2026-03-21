@@ -10,15 +10,16 @@ namespace RenathiaCrochet.Application.Services
     public class AuthService
     {
         private readonly IUserRepository _userRepository;
+        private readonly TokenService _tokenService;
 
-        public AuthService(IUserRepository userRepository)
+        public AuthService(IUserRepository userRepository, TokenService tokenService)
         {
             _userRepository = userRepository;
+            _tokenService = tokenService;
         }
 
         public async Task<AuthResponseDto> RegisterAsync(RegisterDto dto)
         {
-            // Verificar si el correo ya existe
             if (await _userRepository.ExistsByEmailAsync(dto.Email))
             {
                 return new AuthResponseDto
@@ -28,7 +29,6 @@ namespace RenathiaCrochet.Application.Services
                 };
             }
 
-            // Verificar contraseña mínimo 8 caracteres
             if (dto.Password.Length < 8)
             {
                 return new AuthResponseDto
@@ -38,16 +38,14 @@ namespace RenathiaCrochet.Application.Services
                 };
             }
 
-            // Cifrar contraseña
             var passwordHash = BCrypt.Net.BCrypt.HashPassword(dto.Password);
 
-            // Crear usuario
             var user = new User
             {
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = passwordHash,
-                RoleId = 2 // Client
+                RoleId = 2
             };
 
             await _userRepository.AddAsync(user);
@@ -56,6 +54,38 @@ namespace RenathiaCrochet.Application.Services
             {
                 Success = true,
                 Message = "Usuario registrado exitosamente"
+            };
+        }
+
+        public async Task<AuthResponseDto> LoginAsync(LoginDto dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+            if (user == null || !BCrypt.Net.BCrypt.Verify(dto.Password, user.PasswordHash))
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Credenciales incorrectas"
+                };
+            }
+
+            if (!user.IsActive)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Usuario bloqueado temporalmente"
+                };
+            }
+
+            var token = _tokenService.GenerateToken(user);
+
+            return new AuthResponseDto
+            {
+                Success = true,
+                Message = "Inicio de sesión exitoso",
+                Token = token
             };
         }
     }

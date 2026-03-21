@@ -1,6 +1,9 @@
 using Microsoft.AspNetCore.Mvc;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
+using Microsoft.AspNetCore.Mvc;
+using RenathiaCrochet.Application.DTOs;
+using RenathiaCrochet.Application.Services;
 
 namespace RenathiaCrochet.API.Controllers
 {
@@ -19,6 +22,17 @@ namespace RenathiaCrochet.API.Controllers
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
             var result = await _authService.RegisterAsync(dto);
+
+            if (!result.Success)
+                return BadRequest(result);
+
+            return Ok(result);
+        }
+
+        [HttpPost("login")]
+        public async Task<IActionResult> Login([FromBody] LoginDto dto)
+        {
+            var result = await _authService.LoginAsync(dto);
 
             if (!result.Success)
                 return BadRequest(result);
