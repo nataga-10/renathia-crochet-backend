@@ -11,10 +11,12 @@
     <PackageReference Include="Microsoft.AspNetCore.Authentication.JwtBearer" Version="10.0.5" />
     <PackageReference Include="Microsoft.AspNetCore.OpenApi" Version="10.0.4" />
     <PackageReference Include="Microsoft.EntityFrameworkCore.SqlServer" Version="10.0.5" />
+    <PackageReference Include="Swashbuckle.AspNetCore" Version="10.1.5" />
   </ItemGroup>
 
   <ItemGroup>
     <ProjectReference Include="..\RenathiaCrochet.Application\RenathiaCrochet.Application.csproj" />
+    <ProjectReference Include="..\RenathiaCrochet.Infrastructure\RenathiaCrochet.Infrastructure.csproj" />
   </ItemGroup>
 
 </Project>
