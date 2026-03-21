@@ -42,6 +42,7 @@ namespace RenathiaCrochet.Application.Services
                 FullName = dto.FullName,
                 Email = dto.Email,
                 PasswordHash = passwordHash,
+                Phone = dto.Phone,
                 RoleId = 2
             };
 
