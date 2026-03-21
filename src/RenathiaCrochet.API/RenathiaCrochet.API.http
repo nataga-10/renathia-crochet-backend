@@ -3,4 +3,15 @@
 GET {{RenathiaCrochet.API_HostAddress}}/weatherforecast/
 Accept: application/json
 
-###
+{
+  "ConnectionStrings": {
+    "DefaultConnection": "Server=localhost;Database=RenathiaCrochet;Trusted_Connection=True;TrustServerCertificate=True;"
+  },
+  "Logging": {
+    "LogLevel": {
+      "Default": "Information",
+      "Microsoft.AspNetCore": "Warning"
+    }
+  },
+  "AllowedHosts": "*"
+}
