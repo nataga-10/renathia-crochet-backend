@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RenathiaCrochet.Application.DTOs;
+﻿using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
 
@@ -10,9 +7,9 @@ namespace RenathiaCrochet.Application.Services
     public class AuthService
     {
         private readonly IUserRepository _userRepository;
-        private readonly TokenService _tokenService;
+        private readonly ITokenService _tokenService;
 
-        public AuthService(IUserRepository userRepository, TokenService tokenService)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
@@ -102,11 +99,9 @@ namespace RenathiaCrochet.Application.Services
                 };
             }
 
-            // Generar token temporal de reset
             var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
 
-            // Aquí en un proyecto real guardarías el token en BD con expiración
             var resetLink = $"https://renathia.com/reset-password?token={resetToken}&email={user.Email}";
 
             return new AuthResponseDto
