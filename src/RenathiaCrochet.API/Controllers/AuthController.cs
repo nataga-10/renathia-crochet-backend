@@ -1,7 +1,5 @@
 using Microsoft.AspNetCore.Mvc;
-using RenathiaCrochet.Application.DTOs;
-using RenathiaCrochet.Application.Services;
-using Microsoft.AspNetCore.Mvc;
+using RenathiaCrochet.Application;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 
@@ -37,6 +35,13 @@ namespace RenathiaCrochet.API.Controllers
             if (!result.Success)
                 return BadRequest(result);
 
+            return Ok(result);
+        }
+
+        [HttpPost("recover-password")]
+        public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordDto dto)
+        {
+            var result = await _authService.RecoverPasswordAsync(dto);
             return Ok(result);
         }
     }

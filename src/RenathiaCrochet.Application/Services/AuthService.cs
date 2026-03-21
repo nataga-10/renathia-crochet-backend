@@ -88,5 +88,32 @@ namespace RenathiaCrochet.Application.Services
                 Token = token
             };
         }
+
+        public async Task<AuthResponseDto> RecoverPasswordAsync(RecoverPasswordDto dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+            if (user == null)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "Si el correo existe, recibirás las instrucciones"
+                };
+            }
+
+            // Generar token temporal de reset
+            var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
+                .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+            // Aquí en un proyecto real guardarías el token en BD con expiración
+            var resetLink = $"https://renathia.com/reset-password?token={resetToken}&email={user.Email}";
+
+            return new AuthResponseDto
+            {
+                Success = true,
+                Message = "Si el correo existe, recibirás las instrucciones"
+            };
+        }
     }
 }
