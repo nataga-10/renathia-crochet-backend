@@ -34,5 +34,25 @@ namespace RenathiaCrochet.Application.Services
                                  .ToList()
             }).ToList();
         }
+        //Filtro de Productos
+        public async Task<List<ProductDto>> GetByCategoryAsync(int categoryId)
+        {
+            var products = await _productRepository.GetByCategoryAsync(categoryId);
+
+            return products.Select(p => new ProductDto
+            {
+                ProductId = p.ProductId,
+                Name = p.Name,
+                Description = p.Description,
+                BasePrice = p.BasePrice,
+                Stock = p.Stock,
+                IsMadeToOrder = p.IsMadeToOrder,
+                CategoryName = p.Category?.Name,
+                PrimaryImageUrl = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl,
+                Colors = p.Colors.Where(c => c.IsAvailable)
+                                 .Select(c => c.ColorName)
+                                 .ToList()
+            }).ToList();
+        }
     }
 }

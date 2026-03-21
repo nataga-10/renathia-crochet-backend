@@ -24,5 +24,16 @@ namespace RenathiaCrochet.API.Controllers
 
             return Ok(products);
         }
+        //Filtro de productos
+        [HttpGet("category/{categoryId}")]
+        public async Task<IActionResult> GetByCategory(int categoryId)
+        {
+            var products = await _productService.GetByCategoryAsync(categoryId);
+
+            if (!products.Any())
+                return Ok(new { message = "No hay productos disponibles en esta categoría" });
+
+            return Ok(products);
+        }
     }
 }
