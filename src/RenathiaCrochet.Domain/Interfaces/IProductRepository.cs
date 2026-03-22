@@ -1,7 +1,4 @@
-﻿using System;
-using System.Collections.Generic;
-using System.Text;
-using RenathiaCrochet.Domain.Entities;
+﻿using RenathiaCrochet.Domain.Entities;
 
 namespace RenathiaCrochet.Domain.Interfaces
 {
@@ -9,5 +6,9 @@ namespace RenathiaCrochet.Domain.Interfaces
     {
         Task<List<Product>> GetAllActiveAsync();
         Task<List<Product>> GetByCategoryAsync(int categoryId);
+        Task<Product?> GetByIdAsync(int productId);
+        Task AddAsync(Product product);
+        Task UpdateAsync(Product product);
+        Task DeleteAsync(int productId);
     }
 }
