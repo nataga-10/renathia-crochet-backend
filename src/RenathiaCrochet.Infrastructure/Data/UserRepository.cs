@@ -7,6 +7,9 @@ using RenathiaCrochet.Domain.Interfaces;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
+    /// <summary>
+    /// Implementación del repositorio de usuarios con Entity Framework Core.
+    /// </summary>
     public class UserRepository : IUserRepository
     {
         private readonly AppDbContext _context;
@@ -16,12 +19,14 @@ namespace RenathiaCrochet.Infrastructure.Data
             _context = context;
         }
 
+        /// <summary>Busca el primer usuario que coincida con el correo dado.</summary>
         public async Task<User?> GetByEmailAsync(string email)
         {
             return await _context.Users
                 .FirstOrDefaultAsync(u => u.Email == email);
         }
 
+        /// <summary>Consulta eficiente (AnyAsync) para verificar duplicados de correo antes de registrar.</summary>
         public async Task<bool> ExistsByEmailAsync(string email)
         {
             return await _context.Users

@@ -6,6 +6,10 @@ using RenathiaCrochet.Domain.Entities;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
+    /// <summary>
+    /// Contexto principal de Entity Framework Core.
+    /// Mapea las entidades del dominio a las tablas de la base de datos SQL Server.
+    /// </summary>
     public class AppDbContext : DbContext
     {
         public AppDbContext(DbContextOptions<AppDbContext> options) : base(options)
@@ -18,5 +22,8 @@ namespace RenathiaCrochet.Infrastructure.Data
         public DbSet<Category> Categories { get; set; }
         public DbSet<ProductImage> ProductImages { get; set; }
         public DbSet<ProductColor> ProductColors { get; set; }
+        public DbSet<Order> Orders { get; set; }
+        public DbSet<OrderItem> OrderItems { get; set; }
+        public DbSet<OrderTracking> OrderTracking { get; set; }
     }
 }
