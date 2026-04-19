@@ -8,6 +8,11 @@ using MimeKit;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
+    /// <summary>
+    /// Servicio de envío de correos mediante SMTP usando MailKit.
+    /// Actualmente solo implementa el envío del correo de recuperación de contraseña.
+    /// Requiere SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASSWORD en la configuración.
+    /// </summary>
     public class EmailService
     {
         private readonly IConfiguration _configuration;
@@ -17,6 +22,11 @@ namespace RenathiaCrochet.Infrastructure.Data
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Envía un correo HTML al usuario con el enlace para restablecer su contraseña.
+        /// El enlace expira en 30 minutos (responsabilidad del flujo que lo genera).
+        /// Usa StartTLS para la conexión segura con el servidor SMTP.
+        /// </summary>
         public async Task SendPasswordRecoveryEmailAsync(string toEmail, string resetLink)
         {
             var email = new MimeMessage();

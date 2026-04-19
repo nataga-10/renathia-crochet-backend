@@ -4,6 +4,9 @@ using System.Text;
 
 namespace RenathiaCrochet.Domain.Entities
 {
+    /// <summary>
+    /// Representa una categoría de productos (ej: Amigurumis, Accesorios, Decoración).
+    /// </summary>
     public class Category
     {
         public int CategoryId { get; set; }

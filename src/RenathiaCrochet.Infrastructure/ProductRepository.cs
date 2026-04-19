@@ -7,6 +7,10 @@ using RenathiaCrochet.Domain.Interfaces;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
+    /// <summary>
+    /// Implementación del repositorio de productos con Entity Framework Core.
+    /// Usa eager loading (Include) para cargar relaciones y soft delete para eliminaciones.
+    /// </summary>
     public class ProductRepository : IProductRepository
     {
         private readonly AppDbContext _context;
@@ -16,6 +20,9 @@ namespace RenathiaCrochet.Infrastructure.Data
             _context = context;
         }
 
+        /// <summary>
+        /// Carga todos los productos activos con sus relaciones (categoría, imágenes, colores).
+        /// </summary>
         public async Task<List<Product>> GetAllActiveAsync()
         {
             return await _context.Products
@@ -26,6 +33,9 @@ namespace RenathiaCrochet.Infrastructure.Data
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Filtra por categoría y estado activo. Incluye relaciones completas.
+        /// </summary>
         public async Task<List<Product>> GetByCategoryAsync(int categoryId)
         {
             return await _context.Products
@@ -36,6 +46,9 @@ namespace RenathiaCrochet.Infrastructure.Data
                 .ToListAsync();
         }
 
+        /// <summary>
+        /// Busca un producto por ID sin filtrar por IsActive (permite editar productos desactivados).
+        /// </summary>
         public async Task<Product?> GetByIdAsync(int productId)
         {
             return await _context.Products
@@ -57,6 +70,10 @@ namespace RenathiaCrochet.Infrastructure.Data
             await _context.SaveChangesAsync();
         }
 
+        /// <summary>
+        /// Soft delete: en lugar de eliminar el registro, establece IsActive = false.
+        /// Esto preserva el historial del producto en la base de datos.
+        /// </summary>
         public async Task DeleteAsync(int productId)
         {
             var product = await _context.Products.FindAsync(productId);

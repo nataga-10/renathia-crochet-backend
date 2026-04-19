@@ -5,6 +5,9 @@ using RenathiaCrochet.Application.Services;
 
 namespace RenathiaCrochet.API.Controllers
 {
+    /// <summary>
+    /// Controlador de autenticación. Expone los endpoints de registro, login y recuperación de contraseña.
+    /// </summary>
     [ApiController]
     [Route("api/[controller]")]
     public class AuthController : ControllerBase
@@ -16,6 +19,10 @@ namespace RenathiaCrochet.API.Controllers
             _authService = authService;
         }
 
+        /// <summary>
+        /// Registra un nuevo usuario en el sistema.
+        /// Retorna 400 si el correo ya existe o la contraseña no cumple los requisitos.
+        /// </summary>
         [HttpPost("register")]
         public async Task<IActionResult> Register([FromBody] RegisterDto dto)
         {
@@ -27,6 +34,10 @@ namespace RenathiaCrochet.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Autentica un usuario con correo y contraseña.
+        /// Retorna un JWT en caso exitoso, o 400 si las credenciales son incorrectas.
+        /// </summary>
         [HttpPost("login")]
         public async Task<IActionResult> Login([FromBody] LoginDto dto)
         {
@@ -38,6 +49,10 @@ namespace RenathiaCrochet.API.Controllers
             return Ok(result);
         }
 
+        /// <summary>
+        /// Inicia el proceso de recuperación de contraseña.
+        /// Siempre retorna 200 para no revelar si el correo existe en el sistema.
+        /// </summary>
         [HttpPost("recover-password")]
         public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordDto dto)
         {

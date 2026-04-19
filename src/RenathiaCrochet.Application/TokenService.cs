@@ -10,6 +10,10 @@ using System.Text;
 
 namespace RenathiaCrochet.Application.Services
 {
+    /// <summary>
+    /// Implementación del servicio de generación de tokens JWT con algoritmo HS256.
+    /// Lee las claves JWT_SECRET, JWT_ISSUER y JWT_AUDIENCE desde la configuración.
+    /// </summary>
     public class TokenService : ITokenService
     {
         private readonly IConfiguration _configuration;
@@ -19,6 +23,11 @@ namespace RenathiaCrochet.Application.Services
             _configuration = configuration;
         }
 
+        /// <summary>
+        /// Genera un JWT firmado con HMAC-SHA256 que incluye los claims del usuario.
+        /// El token expira 60 minutos después de su emisión.
+        /// Claims incluidos: UserId, Email, FullName, RoleId.
+        /// </summary>
         public string GenerateToken(User user)
         {
             var claims = new[]
