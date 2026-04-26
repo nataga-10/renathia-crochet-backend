@@ -68,10 +68,12 @@ namespace RenathiaCrochet.Application.Services
             // Subir imagen solo si se proporcionó una
             if (imageStream != null && fileName != null)
             {
-                // Prefijo con ProductId para evitar sobreescribir imágenes de otros productos
                 var imageUrl = await _blobStorageService.UploadImageAsync(imageStream, $"{product.ProductId}-{fileName}");
-                product.Images.Add(new ProductImage { ImageUrl = imageUrl, IsPrimary = true, ProductId = product.ProductId });
-                await _productRepository.UpdateAsync(product);
+                if (!string.IsNullOrEmpty(imageUrl))
+                {
+                    product.Images.Add(new ProductImage { ImageUrl = imageUrl, IsPrimary = true, ProductId = product.ProductId });
+                    await _productRepository.UpdateAsync(product);
+                }
             }
 
             return MapToDto(new List<Product> { product }).First();
@@ -103,6 +105,29 @@ namespace RenathiaCrochet.Application.Services
         /// Verifica existencia y delega la eliminación lógica al repositorio.
         /// Retorna false si el producto no existe.
         /// </summary>
+        /// <summary>
+        /// Reemplaza todas las partes/colores de un producto con los nuevos definidos por el admin.
+        /// </summary>
+        public async Task<bool> SetPartsAsync(int productId, SetProductPartsDto dto)
+        {
+            var product = await _productRepository.GetByIdAsync(productId);
+            if (product == null) return false;
+
+            var colors = dto.Parts
+                .SelectMany(p => p.Colors.Select(c => new ProductColor
+                {
+                    ProductId = productId,
+                    PartName = p.PartName,
+                    ColorName = c.ColorName,
+                    ColorHex = c.ColorHex,
+                    IsAvailable = true
+                }))
+                .ToList();
+
+            await _productRepository.SetColorsAsync(productId, colors);
+            return true;
+        }
+
         public async Task<bool> DeleteAsync(int productId)
         {
             var product = await _productRepository.GetByIdAsync(productId);
@@ -125,9 +150,22 @@ namespace RenathiaCrochet.Application.Services
                 BasePrice = p.BasePrice,
                 Stock = p.Stock,
                 IsMadeToOrder = p.IsMadeToOrder,
+                CategoryId = p.CategoryId,
                 CategoryName = p.Category?.Name,
                 PrimaryImageUrl = p.Images.FirstOrDefault(i => i.IsPrimary)?.ImageUrl,
-                Colors = p.Colors.Where(c => c.IsAvailable).Select(c => c.ColorName).ToList()
+                Parts = p.Colors
+                    .Where(c => c.IsAvailable && !string.IsNullOrEmpty(c.PartName))
+                    .GroupBy(c => c.PartName!)
+                    .Select(g => new ProductPartDto
+                    {
+                        PartName = g.Key,
+                        Colors = g.Select(c => new ProductColorItemDto
+                        {
+                            ProductColorId = c.ProductColorId,
+                            ColorName = c.ColorName,
+                            ColorHex = c.ColorHex
+                        }).ToList()
+                    }).ToList()
             }).ToList();
         }
     }

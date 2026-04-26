@@ -9,11 +9,14 @@ using System.Text;
 var builder = WebApplication.CreateBuilder(args);
 
 // CORS
+var allowedOrigins = builder.Configuration["ALLOWED_ORIGINS"]?.Split(",")
+    ?? ["http://localhost:5173", "http://localhost:5174"];
+
 builder.Services.AddCors(options =>
 {
     options.AddPolicy("AllowFrontend", policy =>
     {
-        policy.WithOrigins("http://localhost:5173", "http://localhost:5174")
+        policy.WithOrigins(allowedOrigins)
               .AllowAnyHeader()
               .AllowAnyMethod();
     });

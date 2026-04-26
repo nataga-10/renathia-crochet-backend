@@ -1,7 +1,9 @@
+using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using RenathiaCrochet.Application;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
+using System.Security.Claims;
 
 namespace RenathiaCrochet.API.Controllers
 {
@@ -57,6 +59,32 @@ namespace RenathiaCrochet.API.Controllers
         public async Task<IActionResult> RecoverPassword([FromBody] RecoverPasswordDto dto)
         {
             var result = await _authService.RecoverPasswordAsync(dto);
+            return Ok(result);
+        }
+
+        /// <summary>
+        /// Retorna el perfil del usuario autenticado.
+        /// </summary>
+        [Authorize]
+        [HttpGet("profile")]
+        public async Task<IActionResult> GetProfile()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var profile = await _authService.GetProfileAsync(userId);
+            if (profile == null) return NotFound();
+            return Ok(profile);
+        }
+
+        /// <summary>
+        /// Actualiza los datos del perfil del usuario autenticado.
+        /// </summary>
+        [Authorize]
+        [HttpPut("profile")]
+        public async Task<IActionResult> UpdateProfile([FromBody] UpdateProfileDto dto)
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+            var result = await _authService.UpdateProfileAsync(userId, dto);
+            if (!result.Success) return BadRequest(result);
             return Ok(result);
         }
     }

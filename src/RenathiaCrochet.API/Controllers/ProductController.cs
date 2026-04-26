@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 
@@ -57,7 +58,9 @@ namespace RenathiaCrochet.API.Controllers
         /// <summary>
         /// Crea un nuevo producto. Acepta multipart/form-data para incluir una imagen opcional.
         /// La imagen se sube a Azure Blob Storage si se proporciona.
+        /// Solo accesible para Admin (rol 1) y Seller (rol 3).
         /// </summary>
+        [Authorize(Roles = "1,3")]
         [HttpPost]
         public async Task<IActionResult> Create([FromForm] CreateProductDto dto, IFormFile? image)
         {
@@ -77,7 +80,9 @@ namespace RenathiaCrochet.API.Controllers
 
         /// <summary>
         /// Actualiza los datos de un producto existente. Retorna 404 si no existe.
+        /// Solo accesible para Admin (rol 1) y Seller (rol 3).
         /// </summary>
+        [Authorize(Roles = "1,3")]
         [HttpPut("{id}")]
         public async Task<IActionResult> Update(int id, [FromBody] UpdateProductDto dto)
         {
@@ -90,7 +95,23 @@ namespace RenathiaCrochet.API.Controllers
         /// <summary>
         /// Realiza la eliminación lógica (soft delete) de un producto.
         /// El producto no se borra físicamente, solo se desactiva (IsActive = false).
+        /// Solo accesible para Admin (rol 1) y Seller (rol 3).
         /// </summary>
+        /// <summary>
+        /// Reemplaza las partes personalizables y colores de un producto.
+        /// Llamar después de crear o editar el producto.
+        /// </summary>
+        [Authorize(Roles = "1,3")]
+        [HttpPut("{id}/parts")]
+        public async Task<IActionResult> SetParts(int id, [FromBody] SetProductPartsDto dto)
+        {
+            var result = await _productService.SetPartsAsync(id, dto);
+            if (!result)
+                return NotFound(new { message = "Producto no encontrado" });
+            return Ok(new { message = "Partes actualizadas correctamente" });
+        }
+
+        [Authorize(Roles = "1,3")]
         [HttpDelete("{id}")]
         public async Task<IActionResult> Delete(int id)
         {

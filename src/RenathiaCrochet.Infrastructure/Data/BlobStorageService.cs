@@ -14,7 +14,7 @@ namespace RenathiaCrochet.Infrastructure.Data
     /// </summary>
     public class BlobStorageService : IBlobStorageService
     {
-        private readonly BlobServiceClient _blobServiceClient;
+        private readonly BlobServiceClient? _blobServiceClient;
         private readonly string _containerName;
 
         /// <summary>
@@ -23,8 +23,10 @@ namespace RenathiaCrochet.Infrastructure.Data
         /// </summary>
         public BlobStorageService(IConfiguration configuration)
         {
-            _blobServiceClient = new BlobServiceClient(
-                configuration["AZURE_STORAGE_CONNECTION_STRING"]);
+            var connectionString = configuration["AZURE_STORAGE_CONNECTION_STRING"];
+            if (!string.IsNullOrWhiteSpace(connectionString))
+                _blobServiceClient = new BlobServiceClient(connectionString);
+
             _containerName = configuration["AZURE_BLOB_CONTAINER"] ?? "product-images";
         }
 
@@ -35,6 +37,9 @@ namespace RenathiaCrochet.Infrastructure.Data
         /// </summary>
         public async Task<string> UploadImageAsync(Stream imageStream, string fileName)
         {
+            if (_blobServiceClient == null)
+                return string.Empty;
+
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);
             // Crea el contenedor con acceso público de lectura si aún no existe
             await containerClient.CreateIfNotExistsAsync(PublicAccessType.Blob);
@@ -51,6 +56,9 @@ namespace RenathiaCrochet.Infrastructure.Data
         /// </summary>
         public async Task DeleteImageAsync(string imageUrl)
         {
+            if (_blobServiceClient == null)
+                return;
+
             var uri = new Uri(imageUrl);
             var fileName = Path.GetFileName(uri.LocalPath);
             var containerClient = _blobServiceClient.GetBlobContainerClient(_containerName);

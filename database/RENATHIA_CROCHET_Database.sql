@@ -215,6 +215,25 @@ CREATE TABLE Gallery (
 
 
 -- ============================================================
+-- DATOS INICIALES (SEED)
+-- ============================================================
+INSERT INTO Roles (Name) VALUES ('Admin');   -- RoleId = 1
+INSERT INTO Roles (Name) VALUES ('Client');  -- RoleId = 2
+INSERT INTO Roles (Name) VALUES ('Seller');  -- RoleId = 3
+
+-- Usuarios de prueba (contraseñas hasheadas con BCrypt)
+-- Admin: admin@renathia.com / Admin1234
+INSERT INTO Users (RoleId, FullName, Email, PasswordHash, IsActive)
+VALUES (1, 'Administrador', 'admin@renathia.com',
+        '$2a$11$5AmN8BnN6ph98kt95UKqfeuy.8zedGVdHyzkPXKm58mU0h6utPKDS', 1);
+
+-- Seller: seller@renathia.com / Seller1234
+INSERT INTO Users (RoleId, FullName, Email, PasswordHash, IsActive)
+VALUES (3, 'Vendedor Prueba', 'seller@renathia.com',
+        '$2a$11$KH5HY3YSdLdoQkVJWSXUwu.4clMgknilmeve7O4zwi0qr9V0xbGIO', 1);
+GO
+
+-- ============================================================
 -- ÍNDICES DE RENDIMIENTO
 -- ============================================================
 CREATE INDEX IX_Users_Email          ON Users(Email);

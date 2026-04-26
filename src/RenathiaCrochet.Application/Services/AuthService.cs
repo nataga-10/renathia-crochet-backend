@@ -108,6 +108,42 @@ namespace RenathiaCrochet.Application.Services
         /// NOTA: El envío del correo aún no está implementado (pendiente integrar EmailService).
         /// Siempre retorna el mismo mensaje para no revelar si el correo existe (seguridad).
         /// </summary>
+        public async Task<UserProfileDto?> GetProfileAsync(int userId)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null) return null;
+
+            return new UserProfileDto
+            {
+                UserId = user.UserId,
+                FullName = user.FullName,
+                Email = user.Email,
+                Phone = user.Phone,
+                DocumentType = user.DocumentType,
+                DocumentNumber = user.DocumentNumber,
+                ProfileImageUrl = user.ProfileImageUrl,
+                RoleId = user.RoleId,
+                CreatedAt = user.CreatedAt
+            };
+        }
+
+        public async Task<AuthResponseDto> UpdateProfileAsync(int userId, UpdateProfileDto dto)
+        {
+            var user = await _userRepository.GetByIdAsync(userId);
+            if (user == null)
+                return new AuthResponseDto { Success = false, Message = "Usuario no encontrado" };
+
+            user.FullName = dto.FullName;
+            user.Phone = dto.Phone;
+            user.DocumentType = dto.DocumentType;
+            user.DocumentNumber = dto.DocumentNumber;
+            user.UpdatedAt = DateTime.UtcNow;
+
+            await _userRepository.UpdateAsync(user);
+
+            return new AuthResponseDto { Success = true, Message = "Perfil actualizado exitosamente" };
+        }
+
         public async Task<AuthResponseDto> RecoverPasswordAsync(RecoverPasswordDto dto)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email);

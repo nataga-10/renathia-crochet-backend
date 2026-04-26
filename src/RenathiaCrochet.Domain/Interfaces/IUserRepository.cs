@@ -12,6 +12,7 @@ namespace RenathiaCrochet.Domain.Interfaces
     public interface IUserRepository
     {
         /// <summary>Busca un usuario por su correo electrónico. Retorna null si no existe.</summary>
+        Task<User?> GetByIdAsync(int userId);
         Task<User?> GetByEmailAsync(string email);
         /// <summary>Verifica si ya existe un usuario registrado con ese correo.</summary>
         Task<bool> ExistsByEmailAsync(string email);

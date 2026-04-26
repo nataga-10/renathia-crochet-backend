@@ -12,8 +12,10 @@ namespace RenathiaCrochet.Application.DTOs
         public decimal BasePrice { get; set; }
         public int Stock { get; set; }
         public bool IsMadeToOrder { get; set; }
+        public int? CategoryId { get; set; }
         public string? CategoryName { get; set; }
         public string? PrimaryImageUrl { get; set; }
-        public List<string> Colors { get; set; } = new();
+        /// <summary>Partes personalizables del producto con sus colores disponibles por parte.</summary>
+        public List<ProductPartDto> Parts { get; set; } = new();
     }
 }

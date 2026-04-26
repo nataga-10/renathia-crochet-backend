@@ -19,6 +19,11 @@ namespace RenathiaCrochet.Infrastructure.Data
             _context = context;
         }
 
+        public async Task<User?> GetByIdAsync(int userId)
+        {
+            return await _context.Users.FindAsync(userId);
+        }
+
         /// <summary>Busca el primer usuario que coincida con el correo dado.</summary>
         public async Task<User?> GetByEmailAsync(string email)
         {

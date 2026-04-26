@@ -83,5 +83,14 @@ namespace RenathiaCrochet.Infrastructure.Data
                 await _context.SaveChangesAsync();
             }
         }
+
+        public async Task SetColorsAsync(int productId, List<ProductColor> colors)
+        {
+            var existing = _context.ProductColors.Where(c => c.ProductId == productId);
+            _context.ProductColors.RemoveRange(existing);
+            if (colors.Any())
+                await _context.ProductColors.AddRangeAsync(colors);
+            await _context.SaveChangesAsync();
+        }
     }
 }

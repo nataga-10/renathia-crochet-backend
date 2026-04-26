@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 using System.Security.Claims;
@@ -11,6 +12,7 @@ namespace RenathiaCrochet.API.Controllers
     /// El UserId se obtiene del token JWT, no del body de la peticion.
     /// Implementa HU-05, HU-06, HU-07 y HU-08.
     /// </summary>
+    [Authorize(Roles = "2")]
     [ApiController]
     [Route("api/[controller]")]
     public class CartController : ControllerBase

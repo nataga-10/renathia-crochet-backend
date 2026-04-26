@@ -42,6 +42,10 @@ namespace RenathiaCrochet.Application.DTOs
         public int ProductId { get; set; }
         public int Quantity { get; set; } = 1;
         public int? ProductColorId { get; set; }
+        /// <summary>Precio personalizado para productos con add-ons (llavero con opciones).</summary>
+        public decimal? CustomPrice { get; set; }
+        /// <summary>Descripción de la personalización elegida (ej: "Mosquetón + Asa de cuentas").</summary>
+        public string? CustomizationNotes { get; set; }
     }
 
     /// <summary>

@@ -81,8 +81,16 @@ namespace RenathiaCrochet.Application.Services
                     ProductId = dto.ProductId,
                     ProductColorId = dto.ProductColorId,
                     Quantity = dto.Quantity,
-                    UnitPrice = product.BasePrice
+                    UnitPrice = dto.CustomPrice ?? product.BasePrice
                 };
+                // Agregar notas de personalización al pedido si se enviaron
+                if (!string.IsNullOrWhiteSpace(dto.CustomizationNotes))
+                {
+                    cart.Notes = string.IsNullOrWhiteSpace(cart.Notes)
+                        ? dto.CustomizationNotes
+                        : cart.Notes + " | " + dto.CustomizationNotes;
+                    await _orderRepository.UpdateAsync(cart);
+                }
                 await _orderRepository.AddItemAsync(newItem);
             }
 

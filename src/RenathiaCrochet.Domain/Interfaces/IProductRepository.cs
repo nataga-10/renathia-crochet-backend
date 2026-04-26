@@ -17,5 +17,7 @@ namespace RenathiaCrochet.Domain.Interfaces
         Task UpdateAsync(Product product);
         /// <summary>Realiza soft delete: establece IsActive = false sin eliminar el registro.</summary>
         Task DeleteAsync(int productId);
+        /// <summary>Reemplaza todos los colores/partes de un producto por los nuevos.</summary>
+        Task SetColorsAsync(int productId, List<ProductColor> colors);
     }
 }

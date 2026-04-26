@@ -12,6 +12,8 @@ namespace RenathiaCrochet.Domain.Entities
     {
         public int ProductColorId { get; set; }
         public int ProductId { get; set; }
+        /// <summary>Parte del amigurumi que este color personaliza (ej: "Caparazón"). Null = color general.</summary>
+        public string? PartName { get; set; }
         public string ColorName { get; set; } = string.Empty;
         /// <summary>Código hexadecimal del color (ej: "#FF5733"). Opcional.</summary>
         public string? ColorHex { get; set; }

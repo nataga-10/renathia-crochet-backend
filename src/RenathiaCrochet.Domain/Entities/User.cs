@@ -19,6 +19,9 @@ namespace RenathiaCrochet.Domain.Entities
         /// <summary>Hash generado con BCrypt. No almacenar contraseña en texto plano.</summary>
         public string PasswordHash { get; set; } = string.Empty;
         public string? Phone { get; set; }
+        public string? DocumentType { get; set; }    // CC, NIT, Pasaporte, CE
+        public string? DocumentNumber { get; set; }
+        public string? ProfileImageUrl { get; set; }
         /// <summary>Permite bloquear usuarios sin eliminarlos de la base de datos.</summary>
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
