@@ -68,6 +68,22 @@ namespace RenathiaCrochet.Infrastructure.Data
         }
 
         /// <summary>
+        /// Retorna todos los pedidos confirmados (excluye carritos PendingPayment).
+        /// Usado por Admin y Seller para gestionar pedidos.
+        /// </summary>
+        public async Task<List<Order>> GetAllAsync()
+        {
+            return await _context.Orders
+                .Include(o => o.Items)
+                    .ThenInclude(i => i.Product)
+                .Include(o => o.Tracking)
+                .Include(o => o.User)
+                .Where(o => o.Status != "PendingPayment")
+                .OrderByDescending(o => o.CreatedAt)
+                .ToListAsync();
+        }
+
+        /// <summary>
         /// Crea una nueva orden (carrito) en la base de datos.
         /// Se llama cuando el usuario agrega su PRIMER producto al carrito.
         /// </summary>

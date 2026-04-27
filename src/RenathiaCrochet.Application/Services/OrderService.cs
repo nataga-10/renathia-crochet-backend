@@ -62,6 +62,44 @@ namespace RenathiaCrochet.Application.Services
         }
 
         /// <summary>
+        /// Retorna todos los pedidos confirmados para Admin y Seller.
+        /// </summary>
+        public async Task<List<OrderDto>> GetAllOrdersAsync()
+        {
+            var orders = await _orderRepository.GetAllAsync();
+
+            return orders.Select(o => new OrderDto
+            {
+                OrderId = o.OrderId,
+                DeliveryMethod = o.DeliveryMethod,
+                Subtotal = o.Subtotal,
+                ShippingCost = o.ShippingCost,
+                Total = o.Total,
+                Status = o.Status,
+                StatusDescription = GetStatusDescription(o.Status),
+                CreatedAt = o.CreatedAt,
+                Items = o.Items.Select(i => new CartItemDto
+                {
+                    OrderItemId = i.OrderItemId,
+                    ProductId = i.ProductId,
+                    ProductName = i.Product?.Name ?? string.Empty,
+                    UnitPrice = i.UnitPrice,
+                    Quantity = i.Quantity,
+                    Subtotal = i.UnitPrice * i.Quantity
+                }).ToList(),
+                Tracking = o.Tracking
+                    .OrderBy(t => t.CreatedAt)
+                    .Select(t => new OrderTrackingDto
+                    {
+                        Status = t.Status,
+                        StatusDescription = GetStatusDescription(t.Status),
+                        Notes = t.Notes,
+                        CreatedAt = t.CreatedAt
+                    }).ToList()
+            }).ToList();
+        }
+
+        /// <summary>
         /// Retorna el detalle de un pedido especifico por su ID.
         /// Verifica que el pedido pertenezca al usuario que lo consulta.
         /// </summary>

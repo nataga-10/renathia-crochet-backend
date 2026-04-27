@@ -9,6 +9,7 @@ namespace RenathiaCrochet.API.Controllers
     /// Implementa HU-09 (Ver estado del pedido).
     /// El usuario solo puede ver SUS propios pedidos.
     /// </summary>
+    [Authorize]
     [ApiController]
     [Route("api/[controller]")]
     public class OrdersController : ControllerBase
@@ -24,6 +25,25 @@ namespace RenathiaCrochet.API.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return int.Parse(claim!.Value);
+        }
+
+        /// <summary>
+        /// GET api/Orders/all
+        /// Retorna todos los pedidos confirmados. Solo para Admin (rol 1) y Seller (rol 3).
+        /// </summary>
+        [Authorize(Roles = "1,3")]
+        [HttpGet("all")]
+        public async Task<IActionResult> GetAllOrders()
+        {
+            try
+            {
+                var orders = await _orderService.GetAllOrdersAsync();
+                return Ok(orders);
+            }
+            catch
+            {
+                return StatusCode(500, new { message = "Error al obtener los pedidos" });
+            }
         }
 
         /// <summary>

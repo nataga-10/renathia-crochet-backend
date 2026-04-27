@@ -12,6 +12,7 @@ namespace RenathiaCrochet.Domain.Interfaces
         Task<Order?> GetCartByUserIdAsync(int userId);
         Task<Order?> GetByIdAsync(int orderId);
         Task<List<Order>> GetByUserIdAsync(int userId);
+        Task<List<Order>> GetAllAsync();
         Task AddAsync(Order order);
         Task UpdateAsync(Order order);
         Task AddItemAsync(OrderItem item);
