@@ -39,6 +39,7 @@ namespace RenathiaCrochet.Application.Services
                     Total = o.Total,
                     Status = o.Status,
                     StatusDescription = GetStatusDescription(o.Status),
+                    Notes = o.Notes,
                     CreatedAt = o.CreatedAt,
                     Items = o.Items.Select(i => new CartItemDto
                     {
@@ -77,6 +78,7 @@ namespace RenathiaCrochet.Application.Services
                 Total = o.Total,
                 Status = o.Status,
                 StatusDescription = GetStatusDescription(o.Status),
+                Notes = o.Notes,
                 CreatedAt = o.CreatedAt,
                 Items = o.Items.Select(i => new CartItemDto
                 {
@@ -120,6 +122,7 @@ namespace RenathiaCrochet.Application.Services
                 Total = order.Total,
                 Status = order.Status,
                 StatusDescription = GetStatusDescription(order.Status),
+                Notes = order.Notes,
                 CreatedAt = order.CreatedAt,
                 Items = order.Items.Select(i => new CartItemDto
                 {

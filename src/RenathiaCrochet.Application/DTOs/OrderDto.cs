@@ -18,6 +18,7 @@ namespace RenathiaCrochet.Application.DTOs
         public decimal Total { get; set; }
         public string Status { get; set; } = string.Empty;
         public string StatusDescription { get; set; } = string.Empty;
+        public string? Notes { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<CartItemDto> Items { get; set; } = new();
         public List<OrderTrackingDto> Tracking { get; set; } = new();

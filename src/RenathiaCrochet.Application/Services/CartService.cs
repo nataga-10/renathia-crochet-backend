@@ -62,9 +62,13 @@ namespace RenathiaCrochet.Application.Services
                 });
             }
 
-            // 4. Verificar si el producto ya esta en el carrito
-            var existingItem = cart.Items
-                .FirstOrDefault(i => i.ProductId == dto.ProductId);
+            // 4. Verificar si el producto ya esta en el carrito.
+            // Si viene con notas de personalización, siempre crea un item nuevo
+            // para no fusionar productos con colores/extras distintos.
+            var existingItem = string.IsNullOrWhiteSpace(dto.CustomizationNotes)
+                ? cart.Items.FirstOrDefault(i => i.ProductId == dto.ProductId
+                      && i.UnitPrice == (dto.CustomPrice ?? product.BasePrice))
+                : null;
 
             if (existingItem != null)
             {
