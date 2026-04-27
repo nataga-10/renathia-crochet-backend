@@ -48,7 +48,8 @@ namespace RenathiaCrochet.Application.Services
                         ProductName = i.Product?.Name ?? string.Empty,
                         UnitPrice = i.UnitPrice,
                         Quantity = i.Quantity,
-                        Subtotal = i.UnitPrice * i.Quantity
+                        Subtotal = i.UnitPrice * i.Quantity,
+                        Notes = i.Notes
                     }).ToList(),
                     Tracking = o.Tracking
                         .OrderBy(t => t.CreatedAt)
@@ -131,7 +132,8 @@ namespace RenathiaCrochet.Application.Services
                     ProductName = i.Product?.Name ?? string.Empty,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    Subtotal = i.UnitPrice * i.Quantity
+                    Subtotal = i.UnitPrice * i.Quantity,
+                    Notes = i.Notes
                 }).ToList(),
                 Tracking = order.Tracking
                     .OrderBy(t => t.CreatedAt)

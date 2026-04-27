@@ -85,16 +85,9 @@ namespace RenathiaCrochet.Application.Services
                     ProductId = dto.ProductId,
                     ProductColorId = dto.ProductColorId,
                     Quantity = dto.Quantity,
-                    UnitPrice = dto.CustomPrice ?? product.BasePrice
+                    UnitPrice = dto.CustomPrice ?? product.BasePrice,
+                    Notes = dto.CustomizationNotes
                 };
-                // Agregar notas de personalización al pedido si se enviaron
-                if (!string.IsNullOrWhiteSpace(dto.CustomizationNotes))
-                {
-                    cart.Notes = string.IsNullOrWhiteSpace(cart.Notes)
-                        ? dto.CustomizationNotes
-                        : cart.Notes + " | " + dto.CustomizationNotes;
-                    await _orderRepository.UpdateAsync(cart);
-                }
                 await _orderRepository.AddItemAsync(newItem);
             }
 
@@ -240,7 +233,8 @@ namespace RenathiaCrochet.Application.Services
                         .FirstOrDefault(img => img.IsPrimary)?.ImageUrl,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    Subtotal = i.UnitPrice * i.Quantity
+                    Subtotal = i.UnitPrice * i.Quantity,
+                    Notes = i.Notes
                 }).ToList()
             };
         }

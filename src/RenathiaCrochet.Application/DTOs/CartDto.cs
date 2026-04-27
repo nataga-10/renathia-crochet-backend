@@ -31,6 +31,7 @@ namespace RenathiaCrochet.Application.DTOs
         public decimal UnitPrice { get; set; }
         public int Quantity { get; set; }
         public decimal Subtotal { get; set; }
+        public string? Notes { get; set; }
     }
 
     /// <summary>

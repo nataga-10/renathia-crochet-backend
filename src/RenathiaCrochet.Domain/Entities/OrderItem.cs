@@ -14,6 +14,7 @@ namespace RenathiaCrochet.Domain.Entities
         public int? ProductColorId { get; set; }
         public int Quantity { get; set; } = 1;
         public decimal UnitPrice { get; set; }
+        public string? Notes { get; set; }
 
         // Navegacion
         public Product? Product { get; set; }
