@@ -1,4 +1,5 @@
-﻿using Microsoft.AspNetCore.Mvc;
+﻿using Microsoft.AspNetCore.Authorization;
+using Microsoft.AspNetCore.Mvc;
 using RenathiaCrochet.Application.Services;
 using System.Security.Claims;
 
@@ -32,7 +33,7 @@ namespace RenathiaCrochet.API.Controllers
         /// Retorna todos los pedidos confirmados. Solo para Admin (rol 1) y Seller (rol 3).
         /// </summary>
         [Authorize(Roles = "1,3")]
-        [HttpGet("all")]
+        [HttpGet("admin/all")]
         public async Task<IActionResult> GetAllOrders()
         {
             try
