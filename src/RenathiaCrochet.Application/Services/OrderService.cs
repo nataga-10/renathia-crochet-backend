@@ -73,6 +73,8 @@ namespace RenathiaCrochet.Application.Services
             return orders.Select(o => new OrderDto
             {
                 OrderId = o.OrderId,
+                ClientName = o.User?.FullName,
+                ClientEmail = o.User?.Email,
                 DeliveryMethod = o.DeliveryMethod,
                 Subtotal = o.Subtotal,
                 ShippingCost = o.ShippingCost,
@@ -88,7 +90,8 @@ namespace RenathiaCrochet.Application.Services
                     ProductName = i.Product?.Name ?? string.Empty,
                     UnitPrice = i.UnitPrice,
                     Quantity = i.Quantity,
-                    Subtotal = i.UnitPrice * i.Quantity
+                    Subtotal = i.UnitPrice * i.Quantity,
+                    Notes = i.Notes
                 }).ToList(),
                 Tracking = o.Tracking
                     .OrderBy(t => t.CreatedAt)

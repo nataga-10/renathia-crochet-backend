@@ -12,6 +12,8 @@ namespace RenathiaCrochet.Application.DTOs
     public class OrderDto
     {
         public int OrderId { get; set; }
+        public string? ClientName { get; set; }
+        public string? ClientEmail { get; set; }
         public string DeliveryMethod { get; set; } = string.Empty;
         public decimal Subtotal { get; set; }
         public decimal ShippingCost { get; set; }
