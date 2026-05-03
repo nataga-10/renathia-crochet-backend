@@ -21,6 +21,7 @@ namespace RenathiaCrochet.Application.DTOs
         public string Status { get; set; } = string.Empty;
         public string StatusDescription { get; set; } = string.Empty;
         public string? Notes { get; set; }
+        public string? ShippingAddress { get; set; }
         public DateTime CreatedAt { get; set; }
         public List<CartItemDto> Items { get; set; } = new();
         public List<OrderTrackingDto> Tracking { get; set; } = new();
@@ -47,6 +48,7 @@ namespace RenathiaCrochet.Application.DTOs
     {
         public string DeliveryMethod { get; set; } = "Shipping";
         public int? ShippingAddressId { get; set; }
+        public string? ShippingAddress { get; set; }
         public string? Notes { get; set; }
     }
 }

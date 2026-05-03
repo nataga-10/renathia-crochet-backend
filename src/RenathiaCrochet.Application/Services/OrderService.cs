@@ -76,6 +76,7 @@ namespace RenathiaCrochet.Application.Services
                 ClientName = o.User?.FullName,
                 ClientEmail = o.User?.Email,
                 DeliveryMethod = o.DeliveryMethod,
+                ShippingAddress = o.ShippingAddress,
                 Subtotal = o.Subtotal,
                 ShippingCost = o.ShippingCost,
                 Total = o.Total,

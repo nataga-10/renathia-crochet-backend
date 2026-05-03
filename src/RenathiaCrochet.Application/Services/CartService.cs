@@ -178,6 +178,7 @@ namespace RenathiaCrochet.Application.Services
             // Actualizar datos de entrega
             cart.DeliveryMethod = dto.DeliveryMethod;
             cart.ShippingAddressId = dto.ShippingAddressId;
+            cart.ShippingAddress = dto.ShippingAddress;
             cart.Notes = dto.Notes;
             cart.Status = "PaymentReceived";
             cart.UpdatedAt = DateTime.UtcNow;
@@ -249,6 +250,7 @@ namespace RenathiaCrochet.Application.Services
             {
                 OrderId = order.OrderId,
                 DeliveryMethod = order.DeliveryMethod,
+                ShippingAddress = order.ShippingAddress,
                 Subtotal = order.Subtotal,
                 ShippingCost = order.ShippingCost,
                 Total = order.Total,

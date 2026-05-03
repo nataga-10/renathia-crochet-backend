@@ -18,6 +18,7 @@ namespace RenathiaCrochet.Domain.Entities
         public decimal Total { get; set; }
         public string Status { get; set; } = "PendingPayment";
         public string? Notes { get; set; }
+        public string? ShippingAddress { get; set; }
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
 
