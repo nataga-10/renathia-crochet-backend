@@ -25,6 +25,13 @@ namespace RenathiaCrochet.Application.Services
             return items.Select(MapToDto).ToList();
         }
 
+        /// <summary>Retorna las fotos pendientes de aprobación. Solo Admin.</summary>
+        public async Task<List<GalleryDto>> GetPendingAsync()
+        {
+            var items = await _galleryRepository.GetPendingAsync();
+            return items.Select(MapToDto).ToList();
+        }
+
         /// <summary>Retorna todas las fotos de un usuario.</summary>
         public async Task<List<GalleryDto>> GetByUserAsync(int userId)
         {

@@ -20,6 +20,15 @@ namespace RenathiaCrochet.API.Controllers
             _galleryService = galleryService;
         }
 
+        /// <summary>Retorna las fotos pendientes de aprobación. Solo Admin (rol 1).</summary>
+        [Authorize(Roles = "1")]
+        [HttpGet("pending")]
+        public async Task<IActionResult> GetPending()
+        {
+            var items = await _galleryService.GetPendingAsync();
+            return Ok(items);
+        }
+
         /// <summary>Retorna todas las fotos aprobadas. Acceso público.</summary>
         [HttpGet]
         public async Task<IActionResult> GetApproved()

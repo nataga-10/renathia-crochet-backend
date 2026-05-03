@@ -25,6 +25,15 @@ namespace RenathiaCrochet.Infrastructure.Data
                 .ToListAsync();
         }
 
+        public async Task<List<Gallery>> GetPendingAsync()
+        {
+            return await _context.Gallery
+                .Include(g => g.User)
+                .Where(g => !g.IsApproved)
+                .OrderByDescending(g => g.CreatedAt)
+                .ToListAsync();
+        }
+
         public async Task<List<Gallery>> GetByUserAsync(int userId)
         {
             return await _context.Gallery

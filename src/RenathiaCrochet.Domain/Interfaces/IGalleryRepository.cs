@@ -9,6 +9,8 @@ namespace RenathiaCrochet.Domain.Interfaces
     {
         /// <summary>Retorna solo las fotos aprobadas, ordenadas de más reciente a más antigua.</summary>
         Task<List<Gallery>> GetApprovedAsync();
+        /// <summary>Retorna las fotos pendientes de aprobación (IsApproved = false).</summary>
+        Task<List<Gallery>> GetPendingAsync();
         /// <summary>Retorna todas las fotos de un usuario específico.</summary>
         Task<List<Gallery>> GetByUserAsync(int userId);
         Task<Gallery?> GetByIdAsync(int galleryId);
