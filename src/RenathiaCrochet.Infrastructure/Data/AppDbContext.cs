@@ -30,5 +30,6 @@ namespace RenathiaCrochet.Infrastructure.Data
         public DbSet<Order> Orders { get; set; }
         public DbSet<OrderItem> OrderItems { get; set; }
         public DbSet<OrderTracking> OrderTracking { get; set; }
+        public DbSet<Gallery> Gallery { get; set; }
     }
 }

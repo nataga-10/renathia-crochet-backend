@@ -47,6 +47,7 @@ builder.Services.AddAuthentication(JwtBearerDefaults.AuthenticationScheme)
 builder.Services.AddScoped<IUserRepository, UserRepository>();
 builder.Services.AddScoped<IProductRepository, ProductRepository>();
 builder.Services.AddScoped<IOrderRepository, OrderRepository>();
+builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
 
 // Servicios
 builder.Services.AddScoped<ITokenService, TokenService>();
@@ -55,6 +56,7 @@ builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
+builder.Services.AddScoped<GalleryService>();
 
 builder.Services.AddControllers();
 builder.Services.AddEndpointsApiExplorer();
