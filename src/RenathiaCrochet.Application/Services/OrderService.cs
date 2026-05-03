@@ -152,6 +152,32 @@ namespace RenathiaCrochet.Application.Services
         }
 
         /// <summary>
+        /// HU-11: Cambia el estado de un pedido y registra el cambio en el tracking.
+        /// Solo Admin (rol 1) y Seller (rol 3) pueden ejecutar esta acción.
+        /// Retorna false si el pedido no existe.
+        /// </summary>
+        public async Task<bool> UpdateStatusAsync(int orderId, UpdateOrderStatusDto dto, int updatedByUserId)
+        {
+            var order = await _orderRepository.GetByIdAsync(orderId);
+            if (order == null) return false;
+
+            order.Status = dto.Status;
+            order.UpdatedAt = DateTime.UtcNow;
+            await _orderRepository.UpdateAsync(order);
+
+            await _orderRepository.AddTrackingAsync(new Domain.Entities.OrderTracking
+            {
+                OrderId = orderId,
+                Status = dto.Status,
+                Notes = dto.Notes,
+                CreatedBy = updatedByUserId,
+                CreatedAt = DateTime.UtcNow
+            });
+
+            return true;
+        }
+
+        /// <summary>
         /// Convierte el estado tecnico a texto legible en espanol.
         /// Los mismos estados que usa CartService.
         /// </summary>
@@ -165,6 +191,7 @@ namespace RenathiaCrochet.Application.Services
             "Delivered" => "Entregado",
             "ReadyForPickup" => "Listo para recoger",
             "PickedUp" => "Recogido",
+            "Cancelled" => "Cancelado",
             _ => status
         };
     }

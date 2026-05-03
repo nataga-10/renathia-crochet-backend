@@ -1,5 +1,6 @@
 ﻿using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 using System.Security.Claims;
 
@@ -26,6 +27,22 @@ namespace RenathiaCrochet.API.Controllers
         {
             var claim = User.FindFirst(ClaimTypes.NameIdentifier);
             return int.Parse(claim!.Value);
+        }
+
+        /// <summary>
+        /// PUT api/Orders/{id}/status
+        /// HU-11: Cambia el estado de un pedido y registra el cambio en el tracking.
+        /// Solo Admin (rol 1) y Seller (rol 3).
+        /// </summary>
+        [Authorize(Roles = "1,3")]
+        [HttpPut("{id}/status")]
+        public async Task<IActionResult> UpdateStatus(int id, [FromBody] UpdateOrderStatusDto dto)
+        {
+            var userId = GetUserId();
+            var found = await _orderService.UpdateStatusAsync(id, dto, userId);
+            if (!found)
+                return NotFound(new { message = "Pedido no encontrado" });
+            return Ok(new { message = "Estado actualizado correctamente" });
         }
 
         /// <summary>
