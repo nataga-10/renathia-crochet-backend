@@ -17,11 +17,16 @@ namespace RenathiaCrochet.Application.Services
     {
         private readonly IOrderRepository _orderRepository;
         private readonly IProductRepository _productRepository;
+        private readonly WompiService _wompiService;
 
-        public CartService(IOrderRepository orderRepository, IProductRepository productRepository)
+        public CartService(
+            IOrderRepository orderRepository,
+            IProductRepository productRepository,
+            WompiService wompiService)
         {
             _orderRepository = orderRepository;
             _productRepository = productRepository;
+            _wompiService = wompiService;
         }
 
         /// <summary>
@@ -165,36 +170,52 @@ namespace RenathiaCrochet.Application.Services
         }
 
         /// <summary>
-        /// HU-08: Finaliza la compra.
-        /// Cambia el estado del carrito de PendingPayment a PaymentReceived.
-        /// Registra el metodo de entrega y agrega tracking.
+        /// HU-08: Prepara el pedido para el pago con Wompi.
+        ///
+        /// A diferencia del flujo anterior, aqui NO se marca el pedido como pagado.
+        /// El pedido queda en "PendingPayment" hasta que Wompi confirme el pago
+        /// via webhook (POST /api/Payments/wompi-webhook).
+        ///
+        /// Lo que hace este metodo:
+        ///   1. Guarda los datos de entrega en el pedido.
+        ///   2. Calcula el hash de integridad que necesita el widget de Wompi.
+        ///   3. Retorna todos los datos necesarios para inicializar el widget.
         /// </summary>
-        public async Task<OrderDto> CheckoutAsync(int userId, CheckoutDto dto)
+        public async Task<CheckoutResponseDto> CheckoutAsync(int userId, CheckoutDto dto)
         {
             var cart = await _orderRepository.GetCartByUserIdAsync(userId);
             if (cart == null || !cart.Items.Any())
                 throw new Exception("No tienes productos en el carrito");
 
-            // Actualizar datos de entrega
+            // Guardar datos de entrega (el status se queda en PendingPayment)
             cart.DeliveryMethod = dto.DeliveryMethod;
             cart.ShippingAddressId = dto.ShippingAddressId;
             cart.ShippingAddress = dto.ShippingAddress;
             cart.Notes = dto.Notes;
-            cart.Status = "PaymentReceived";
             cart.UpdatedAt = DateTime.UtcNow;
 
             await _orderRepository.UpdateAsync(cart);
 
-            // Agregar tracking de pago recibido
-            await _orderRepository.AddTrackingAsync(new OrderTracking
+            // La referencia de Wompi es el OrderId como string
+            var reference = cart.OrderId.ToString();
+
+            // Wompi trabaja en centavos: $50.000 COP -> 5.000.000 centavos
+            var amountInCents = (long)(cart.Total * 100);
+
+            // El hash de integridad se calcula en el backend para no exponer
+            // la llave de integridad al frontend
+            var integrityHash = _wompiService.ComputeIntegrityHash(reference, amountInCents);
+
+            return new CheckoutResponseDto
             {
                 OrderId = cart.OrderId,
-                Status = "PaymentReceived",
-                Notes = "Pago recibido - pedido confirmado"
-            });
-
-            var order = await _orderRepository.GetByIdAsync(cart.OrderId);
-            return MapToOrderDto(order!);
+                Total = cart.Total,
+                PublicKey = _wompiService.PublicKey,
+                Reference = reference,
+                AmountInCents = amountInCents,
+                Currency = "COP",
+                IntegrityHash = integrityHash
+            };
         }
 
         /// <summary>

@@ -54,6 +54,7 @@ builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
+builder.Services.AddScoped<WompiService>();   // <-- maneja integridad y firma del webhook
 builder.Services.AddScoped<CartService>();
 builder.Services.AddScoped<OrderService>();
 builder.Services.AddScoped<GalleryService>();
