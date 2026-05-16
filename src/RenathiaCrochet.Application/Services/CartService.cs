@@ -197,7 +197,7 @@ namespace RenathiaCrochet.Application.Services
             await _orderRepository.UpdateAsync(cart);
 
             // La referencia de Wompi es el OrderId como string
-            var reference = cart.OrderId.ToString();
+            var reference = $"{cart.OrderId}-{DateTimeOffset.UtcNow.ToUnixTimeSeconds()}";
 
             // Wompi trabaja en centavos: $50.000 COP -> 5.000.000 centavos
             var amountInCents = (long)(cart.Total * 100);

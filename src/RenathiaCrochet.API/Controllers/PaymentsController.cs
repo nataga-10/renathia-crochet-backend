@@ -100,8 +100,9 @@ namespace RenathiaCrochet.API.Controllers
                 return Ok(new { message = "Transaccion no aprobada, pedido sin cambios" });
             }
 
-            // ── Paso 4: Buscar el pedido por la referencia (= OrderId) ───────
-            if (!int.TryParse(transaction.Reference, out int orderId))
+            // ── Paso 4: Buscar el pedido por la referencia (formato "OrderId-timestamp") ───
+            var referencePart = transaction.Reference.Split('-')[0];
+            if (!int.TryParse(referencePart, out int orderId))
             {
                 _logger.LogWarning("Referencia de Wompi no es un OrderId valido: {ref}", transaction.Reference);
                 return BadRequest(new { message = "Referencia invalida" });
