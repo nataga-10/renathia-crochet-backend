@@ -6,9 +6,6 @@ using RenathiaCrochet.Domain.Interfaces;
 using RenathiaCrochet.Infrastructure.Data;
 using System.Text;
 
-using QuestPDF.Infrastructure;
-QuestPDF.Settings.License = LicenseType.Community;
-
 var builder = WebApplication.CreateBuilder(args);
 
 // CORS

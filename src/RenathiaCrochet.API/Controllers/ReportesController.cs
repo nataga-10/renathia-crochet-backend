@@ -1,11 +1,14 @@
 using ClosedXML.Excel;
+using iText.Kernel.Colors;
+using iText.Kernel.Geom;
+using iText.Kernel.Pdf;
+using iText.Layout;
+using iText.Layout.Element;
+using iText.Layout.Properties;
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
 using Microsoft.Data.SqlClient;
 using Microsoft.EntityFrameworkCore;
-using QuestPDF.Fluent;
-using QuestPDF.Helpers;
-using QuestPDF.Infrastructure;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Infrastructure.Data;
 
@@ -296,200 +299,147 @@ namespace RenathiaCrochet.API.Controllers
 
         // ─── GENERACIÓN PDF ──────────────────────────────────────────────────
 
+        private static readonly DeviceRgb ColorPink = new(201, 110, 160);
+        private static readonly DeviceRgb ColorPinkLight = new(253, 240, 247);
+
+        private static Cell HeaderCell(string text) =>
+            new Cell()
+                .Add(new Paragraph(text).SetBold())
+                .SetBackgroundColor(ColorPink)
+                .SetFontColor(ColorConstants.WHITE)
+                .SetFontSize(8)
+                .SetTextAlignment(TextAlignment.CENTER)
+                .SetPadding(5);
+
+        private static Cell DataCell(string text, bool alt, bool alignLeft = false) =>
+            new Cell()
+                .Add(new Paragraph(text))
+                .SetBackgroundColor(alt ? ColorPinkLight : ColorConstants.WHITE)
+                .SetFontSize(8)
+                .SetTextAlignment(alignLeft ? TextAlignment.LEFT : TextAlignment.CENTER)
+                .SetPadding(4);
+
         private static byte[] GenerarPdfVentas(
             List<VentaDetalleDiaDto> detalle,
             VentaResumenDto? resumen,
             DateTime fechaInicio, DateTime fechaFin)
         {
-            return Document.Create(container =>
+            var ms = new MemoryStream();
+            var writer = new PdfWriter(ms);
+            var pdf = new PdfDocument(writer);
+            var doc = new Document(pdf, PageSize.A4.Rotate());
+            doc.SetMargins(40, 40, 40, 40);
+
+            // Título
+            doc.Add(new Paragraph("Reporte de Ventas por Período")
+                .SetFontSize(16).SetBold().SetFontColor(ColorPink).SetMarginBottom(2));
+            doc.Add(new Paragraph($"Período: {fechaInicio:dd/MM/yyyy} — {fechaFin:dd/MM/yyyy}  |  Renathia Crochet — {DateTime.Now:dd/MM/yyyy HH:mm}")
+                .SetFontSize(9).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
+
+            // Subtítulo detalle
+            doc.Add(new Paragraph("Detalle por día")
+                .SetFontSize(11).SetBold().SetFontColor(ColorPink).SetMarginBottom(6));
+
+            // Tabla detalle
+            var table = new iText.Layout.Element.Table(UnitValue.CreatePercentArray(new float[] { 2, 1, 1, 1.5f, 1.5f, 1.5f, 1.5f }))
+                .UseAllAvailableWidth();
+
+            table.AddHeaderCell(HeaderCell("Fecha"));
+            table.AddHeaderCell(HeaderCell("Órdenes"));
+            table.AddHeaderCell(HeaderCell("Unidades"));
+            table.AddHeaderCell(HeaderCell("Subtotal"));
+            table.AddHeaderCell(HeaderCell("Envío"));
+            table.AddHeaderCell(HeaderCell("Ingresos"));
+            table.AddHeaderCell(HeaderCell("Promedio"));
+
+            bool alt = false;
+            foreach (var d in detalle)
             {
-                container.Page(page =>
+                table.AddCell(DataCell(d.Fecha.ToString("dd/MM/yy"), alt));
+                table.AddCell(DataCell(d.TotalOrdenes.ToString(), alt));
+                table.AddCell(DataCell(d.TotalUnidades.ToString(), alt));
+                table.AddCell(DataCell($"${d.TotalSubtotal:N0}", alt));
+                table.AddCell(DataCell($"${d.TotalEnvio:N0}", alt));
+                table.AddCell(DataCell($"${d.TotalIngresos:N0}", alt));
+                table.AddCell(DataCell($"${d.PromedioOrden:N0}", alt));
+                alt = !alt;
+            }
+            doc.Add(table);
+
+            // Resumen global
+            if (resumen != null)
+            {
+                doc.Add(new Paragraph("Resumen Global")
+                    .SetFontSize(11).SetBold().SetFontColor(ColorPink).SetMarginTop(14).SetMarginBottom(6));
+
+                var resumenTable = new iText.Layout.Element.Table(UnitValue.CreatePercentArray(new float[] { 1, 1 }))
+                    .UseAllAvailableWidth()
+                    .SetBackgroundColor(ColorPinkLight);
+
+                void ResumenFila(string label, string valor)
                 {
-                    page.Size(PageSizes.A4.Landscape());
-                    page.Margin(1.5f, Unit.Centimetre);
-                    page.DefaultTextStyle(t => t.FontSize(9));
+                    resumenTable.AddCell(new Cell().Add(new Paragraph(label).SetBold()).SetFontSize(9).SetPadding(5).SetBorder(iText.Layout.Borders.Border.NO_BORDER));
+                    resumenTable.AddCell(new Cell().Add(new Paragraph(valor)).SetFontSize(9).SetPadding(5).SetBorder(iText.Layout.Borders.Border.NO_BORDER));
+                }
 
-                    page.Header().Element(HeaderVentas(fechaInicio, fechaFin));
-                    page.Footer().AlignCenter().Text(t =>
-                    {
-                        t.Span("Renathia Crochet — Reporte de Ventas | ");
-                        t.CurrentPageNumber();
-                        t.Span(" / ");
-                        t.TotalPages();
-                    });
+                ResumenFila("Total Órdenes:", resumen.TotalOrdenes.ToString());
+                ResumenFila("Unidades Vendidas:", resumen.TotalUnidadesVendidas.ToString());
+                ResumenFila("Total Ingresos:", $"${resumen.TotalIngresos:N2}");
+                ResumenFila("Total Envíos:", $"${resumen.TotalEnvio:N2}");
+                ResumenFila("Promedio por Orden:", $"${resumen.PromedioOrden:N2}");
+                ResumenFila("Orden Máxima:", $"${resumen.OrdenMaxima:N2}");
+                ResumenFila("Orden Mínima:", $"${resumen.OrdenMinima:N2}");
+                doc.Add(resumenTable);
+            }
 
-                    page.Content().Column(col =>
-                    {
-                        col.Item().PaddingBottom(8).Text("Detalle por día")
-                            .FontSize(11).Bold().FontColor(Color.FromHex("#C96EA0"));
-
-                        col.Item().Table(table =>
-                        {
-                            table.ColumnsDefinition(c =>
-                            {
-                                c.ConstantColumn(70); // Fecha
-                                c.RelativeColumn();   // Órdenes
-                                c.RelativeColumn();   // Unidades
-                                c.RelativeColumn();   // Subtotal
-                                c.RelativeColumn();   // Envío
-                                c.RelativeColumn();   // Ingresos
-                                c.RelativeColumn();   // Promedio
-                            });
-
-                            // Header
-                            static IContainer CeldaHeader(IContainer c) =>
-                                c.Background(Color.FromHex("#C96EA0")).Padding(5)
-                                 .AlignCenter().DefaultTextStyle(s => s.FontColor(Colors.White).Bold().FontSize(8));
-
-                            table.Header(h =>
-                            {
-                                h.Cell().Element(CeldaHeader).Text("Fecha");
-                                h.Cell().Element(CeldaHeader).Text("Órdenes");
-                                h.Cell().Element(CeldaHeader).Text("Unidades");
-                                h.Cell().Element(CeldaHeader).Text("Subtotal");
-                                h.Cell().Element(CeldaHeader).Text("Envío");
-                                h.Cell().Element(CeldaHeader).Text("Ingresos");
-                                h.Cell().Element(CeldaHeader).Text("Promedio");
-                            });
-
-                            bool alt = false;
-                            foreach (var d in detalle)
-                            {
-                                var bg = alt ? Color.FromHex("#FDF0F7") : Colors.White;
-                                alt = !alt;
-
-                                static IContainer CeldaFila(IContainer c, Color bg) =>
-                                    c.Background(bg).Padding(4).AlignCenter();
-
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text(d.Fecha.ToString("dd/MM/yy"));
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text(d.TotalOrdenes.ToString());
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text(d.TotalUnidades.ToString());
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text($"${d.TotalSubtotal:N0}");
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text($"${d.TotalEnvio:N0}");
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text($"${d.TotalIngresos:N0}");
-                                table.Cell().Element(c => CeldaFila(c, bg)).Text($"${d.PromedioOrden:N0}");
-                            }
-                        });
-
-                        if (resumen != null)
-                        {
-                            col.Item().PaddingTop(14).PaddingBottom(6)
-                                .Text("Resumen Global").FontSize(11).Bold().FontColor(Color.FromHex("#C96EA0"));
-
-                            col.Item().Background(Color.FromHex("#FDF0F7")).Padding(12).Column(r =>
-                            {
-                                void Fila(string label, string value)
-                                {
-                                    r.Item().Row(row =>
-                                    {
-                                        row.RelativeItem().Text(label).Bold();
-                                        row.RelativeItem().Text(value);
-                                    });
-                                    r.Item().PaddingBottom(3);
-                                }
-                                Fila("Total Órdenes:", resumen.TotalOrdenes.ToString());
-                                Fila("Unidades Vendidas:", resumen.TotalUnidadesVendidas.ToString());
-                                Fila("Total Ingresos:", $"${resumen.TotalIngresos:N2}");
-                                Fila("Total Envíos:", $"${resumen.TotalEnvio:N2}");
-                                Fila("Promedio por Orden:", $"${resumen.PromedioOrden:N2}");
-                                Fila("Orden Máxima:", $"${resumen.OrdenMaxima:N2}");
-                                Fila("Orden Mínima:", $"${resumen.OrdenMinima:N2}");
-                            });
-                        }
-                    });
-                });
-            }).GeneratePdf();
+            doc.Close();
+            return ms.ToArray();
         }
 
         private static byte[] GenerarPdfProductos(List<ProductoMasVendidoDto> productos, int top)
         {
-            return Document.Create(container =>
+            var ms = new MemoryStream();
+            var writer = new PdfWriter(ms);
+            var pdf = new PdfDocument(writer);
+            var doc = new Document(pdf, PageSize.A4.Rotate());
+            doc.SetMargins(40, 40, 40, 40);
+
+            // Título
+            doc.Add(new Paragraph($"Top {top} Productos Más Vendidos")
+                .SetFontSize(16).SetBold().SetFontColor(ColorPink).SetMarginBottom(2));
+            doc.Add(new Paragraph($"Renathia Crochet — generado el {DateTime.Now:dd/MM/yyyy HH:mm}")
+                .SetFontSize(9).SetFontColor(ColorConstants.GRAY).SetMarginBottom(10));
+
+            var table = new iText.Layout.Element.Table(UnitValue.CreatePercentArray(new float[] { 0.5f, 3, 1.2f, 1, 1, 1.2f, 1, 1.5f }))
+                .UseAllAvailableWidth();
+
+            table.AddHeaderCell(HeaderCell("#"));
+            table.AddHeaderCell(HeaderCell("Producto"));
+            table.AddHeaderCell(HeaderCell("Precio Base"));
+            table.AddHeaderCell(HeaderCell("Stock"));
+            table.AddHeaderCell(HeaderCell("Activo"));
+            table.AddHeaderCell(HeaderCell("Unidades"));
+            table.AddHeaderCell(HeaderCell("Órdenes"));
+            table.AddHeaderCell(HeaderCell("Ingresos"));
+
+            bool alt = false;
+            int rank = 1;
+            foreach (var p in productos)
             {
-                container.Page(page =>
-                {
-                    page.Size(PageSizes.A4.Landscape());
-                    page.Margin(1.5f, Unit.Centimetre);
-                    page.DefaultTextStyle(t => t.FontSize(9));
+                table.AddCell(DataCell(rank++.ToString(), alt));
+                table.AddCell(DataCell(p.Producto, alt, alignLeft: true));
+                table.AddCell(DataCell($"${p.PrecioBase:N0}", alt));
+                table.AddCell(DataCell(p.StockActual.ToString(), alt));
+                table.AddCell(DataCell(p.Activo ? "Sí" : "No", alt));
+                table.AddCell(DataCell(p.TotalUnidadesVendidas.ToString(), alt));
+                table.AddCell(DataCell(p.TotalOrdenes.ToString(), alt));
+                table.AddCell(DataCell($"${p.TotalIngresosGenerados:N0}", alt));
+                alt = !alt;
+            }
+            doc.Add(table);
 
-                    page.Header().Column(h =>
-                    {
-                        h.Item().Text($"Top {top} Productos Más Vendidos")
-                            .FontSize(16).Bold().FontColor(Color.FromHex("#C96EA0"));
-                        h.Item().Text($"Renathia Crochet — generado el {DateTime.Now:dd/MM/yyyy HH:mm}")
-                            .FontSize(9).FontColor(Colors.Grey.Medium);
-                        h.Item().PaddingBottom(8);
-                    });
-
-                    page.Footer().AlignCenter().Text(t =>
-                    {
-                        t.Span("Renathia Crochet | ");
-                        t.CurrentPageNumber();
-                        t.Span(" / ");
-                        t.TotalPages();
-                    });
-
-                    page.Content().Table(table =>
-                    {
-                        table.ColumnsDefinition(c =>
-                        {
-                            c.ConstantColumn(25);  // #
-                            c.RelativeColumn(3);   // Producto
-                            c.RelativeColumn();    // Precio
-                            c.RelativeColumn();    // Stock
-                            c.RelativeColumn();    // Activo
-                            c.RelativeColumn();    // Unidades
-                            c.RelativeColumn();    // Órdenes
-                            c.RelativeColumn(1.5f);// Ingresos
-                        });
-
-                        static IContainer CeldaH(IContainer c) =>
-                            c.Background(Color.FromHex("#C96EA0")).Padding(5)
-                             .AlignCenter().DefaultTextStyle(s => s.FontColor(Colors.White).Bold().FontSize(8));
-
-                        table.Header(h =>
-                        {
-                            h.Cell().Element(CeldaH).Text("#");
-                            h.Cell().Element(CeldaH).Text("Producto");
-                            h.Cell().Element(CeldaH).Text("Precio Base");
-                            h.Cell().Element(CeldaH).Text("Stock");
-                            h.Cell().Element(CeldaH).Text("Activo");
-                            h.Cell().Element(CeldaH).Text("Unidades");
-                            h.Cell().Element(CeldaH).Text("Órdenes");
-                            h.Cell().Element(CeldaH).Text("Ingresos");
-                        });
-
-                        bool alt = false;
-                        int rank = 1;
-                        foreach (var p in productos)
-                        {
-                            var bg = alt ? Color.FromHex("#FDF0F7") : Colors.White;
-                            alt = !alt;
-
-                            static IContainer CeldaF(IContainer c, Color bg) =>
-                                c.Background(bg).Padding(4).AlignCenter();
-
-                            table.Cell().Element(c => CeldaF(c, bg)).Text(rank++.ToString());
-                            table.Cell().Element(c => CeldaF(c, bg)).AlignLeft().Text(p.Producto);
-                            table.Cell().Element(c => CeldaF(c, bg)).Text($"${p.PrecioBase:N0}");
-                            table.Cell().Element(c => CeldaF(c, bg)).Text(p.StockActual.ToString());
-                            table.Cell().Element(c => CeldaF(c, bg)).Text(p.Activo ? "Sí" : "No");
-                            table.Cell().Element(c => CeldaF(c, bg)).Text(p.TotalUnidadesVendidas.ToString());
-                            table.Cell().Element(c => CeldaF(c, bg)).Text(p.TotalOrdenes.ToString());
-                            table.Cell().Element(c => CeldaF(c, bg)).Text($"${p.TotalIngresosGenerados:N0}");
-                        }
-                    });
-                });
-            }).GeneratePdf();
+            doc.Close();
+            return ms.ToArray();
         }
-
-        private static Action<IContainer> HeaderVentas(DateTime inicio, DateTime fin) =>
-            c => c.Column(h =>
-            {
-                h.Item().Text("Reporte de Ventas por Período")
-                    .FontSize(16).Bold().FontColor(Color.FromHex("#C96EA0"));
-                h.Item().Text($"Período: {inicio:dd/MM/yyyy} — {fin:dd/MM/yyyy}  |  Renathia Crochet — {DateTime.Now:dd/MM/yyyy HH:mm}")
-                    .FontSize(9).FontColor(Colors.Grey.Medium);
-                h.Item().PaddingBottom(8);
-            });
     }
 }
