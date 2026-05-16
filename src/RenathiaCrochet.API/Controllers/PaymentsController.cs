@@ -4,6 +4,7 @@ using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
+using RenathiaCrochet.Infrastructure.Data;
 
 namespace RenathiaCrochet.API.Controllers
 {
@@ -25,15 +26,21 @@ namespace RenathiaCrochet.API.Controllers
     {
         private readonly WompiService _wompiService;
         private readonly IOrderRepository _orderRepository;
+        private readonly IUserRepository _userRepository;
+        private readonly EmailService _emailService;
         private readonly ILogger<PaymentsController> _logger;
 
         public PaymentsController(
             WompiService wompiService,
             IOrderRepository orderRepository,
+            IUserRepository userRepository,
+            EmailService emailService,
             ILogger<PaymentsController> logger)
         {
             _wompiService = wompiService;
             _orderRepository = orderRepository;
+            _userRepository = userRepository;
+            _emailService = emailService;
             _logger = logger;
         }
 
@@ -133,6 +140,27 @@ namespace RenathiaCrochet.API.Controllers
             _logger.LogInformation(
                 "Pedido {orderId} confirmado como PaymentReceived. Transaccion Wompi: {id}",
                 orderId, transaction.Id);
+
+            // ── Paso 7: Enviar correo de confirmación al cliente ─────────────
+            // Se envuelve en try-catch para que un fallo de correo nunca rompa
+            // la respuesta 200 OK que Wompi necesita recibir.
+            try
+            {
+                var user = await _userRepository.GetByIdAsync(order.UserId);
+                if (user != null)
+                {
+                    await _emailService.SendOrderConfirmationAsync(order, user.Email);
+                    _logger.LogInformation(
+                        "Correo de confirmación enviado a {email} para el pedido {orderId}",
+                        user.Email, orderId);
+                }
+            }
+            catch (Exception ex)
+            {
+                // El pago ya fue procesado; solo registramos el error del correo.
+                _logger.LogError(ex,
+                    "Error al enviar correo de confirmación para el pedido {orderId}", orderId);
+            }
 
             // Wompi espera un 200 OK para saber que recibimos correctamente el evento.
             return Ok(new { message = "Pago confirmado correctamente" });
