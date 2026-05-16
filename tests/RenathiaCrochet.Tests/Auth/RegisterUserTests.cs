@@ -17,11 +17,12 @@ namespace RenathiaCrochet.Tests.Auth
             // Arrange
             var mockRepo = new Mock<IUserRepository>();
             var mockToken = new Mock<ITokenService>();
+            var mockEmail = new Mock<IEmailService>();
 
             mockRepo.Setup(r => r.ExistsByEmailAsync(It.IsAny<string>()))
                     .ReturnsAsync(false);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object);
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object);
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto
@@ -43,11 +44,12 @@ namespace RenathiaCrochet.Tests.Auth
             // Arrange
             var mockRepo = new Mock<IUserRepository>();
             var mockToken = new Mock<ITokenService>();
+            var mockEmail = new Mock<IEmailService>();
 
             mockRepo.Setup(r => r.ExistsByEmailAsync("test@correo.com"))
                     .ReturnsAsync(true);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object);
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object);
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto
@@ -68,11 +70,12 @@ namespace RenathiaCrochet.Tests.Auth
             // Arrange
             var mockRepo = new Mock<IUserRepository>();
             var mockToken = new Mock<ITokenService>();
+            var mockEmail = new Mock<IEmailService>();
 
             mockRepo.Setup(r => r.ExistsByEmailAsync(It.IsAny<string>()))
                     .ReturnsAsync(false);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object);
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object);
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto

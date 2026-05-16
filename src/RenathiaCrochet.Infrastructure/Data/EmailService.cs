@@ -1,18 +1,16 @@
-﻿using System;
-using System.Collections.Generic;
 using System.Text;
-using MailKit.Net.Smtp;
-using MailKit.Security;
 using Microsoft.Extensions.Configuration;
-using MimeKit;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
+using SendGrid;
+using SendGrid.Helpers.Mail;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
     /// <summary>
-    /// Servicio de envío de correos mediante SMTP usando MailKit.
-    /// Requiere SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASS en la configuración.
+    /// Servicio de envío de correos mediante SendGrid HTTP API.
+    /// Requiere SENDGRID_API_KEY y SMTP_USER (dirección remitente) en la configuración.
+    /// No usa SMTP directo, por lo que funciona en Azure Free tier sin restricciones.
     /// </summary>
     public class EmailService : IEmailService
     {
@@ -29,11 +27,6 @@ namespace RenathiaCrochet.Infrastructure.Data
         /// </summary>
         public async Task SendOrderConfirmationAsync(Order order, string clientEmail)
         {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_configuration["SMTP_USER"]));
-            email.To.Add(MailboxAddress.Parse(clientEmail));
-            email.Subject = $"¡Pedido confirmado! #{order.OrderId} - Renathia Crochet";
-
             var itemsHtml = new StringBuilder();
             foreach (var item in order.Items)
             {
@@ -52,9 +45,7 @@ namespace RenathiaCrochet.Infrastructure.Data
                 ? "Recogida en punto"
                 : $"Envío a domicilio — {order.ShippingAddress}";
 
-            email.Body = new TextPart("html")
-            {
-                Text = $@"
+            var html = $@"
 <!DOCTYPE html>
 <html lang='es'>
 <head><meta charset='UTF-8'><meta name='viewport' content='width=device-width,initial-scale=1'></head>
@@ -63,7 +54,6 @@ namespace RenathiaCrochet.Infrastructure.Data
     <tr><td align='center'>
       <table width='600' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(201,110,160,0.10);'>
 
-        <!-- Cabecera -->
         <tr>
           <td style='background:#C96EA0;padding:32px 40px;text-align:center;'>
             <h1 style='margin:0;color:#ffffff;font-size:26px;letter-spacing:1px;'>Renathia Crochet</h1>
@@ -71,7 +61,6 @@ namespace RenathiaCrochet.Infrastructure.Data
           </td>
         </tr>
 
-        <!-- Mensaje principal -->
         <tr>
           <td style='padding:36px 40px 20px;'>
             <h2 style='color:#C96EA0;margin:0 0 10px;font-size:20px;'>¡Tu pedido fue confirmado!</h2>
@@ -82,7 +71,6 @@ namespace RenathiaCrochet.Infrastructure.Data
           </td>
         </tr>
 
-        <!-- Tabla de productos -->
         <tr>
           <td style='padding:0 40px 28px;'>
             <table width='100%' cellpadding='0' cellspacing='0' style='border-collapse:collapse;font-size:14px;'>
@@ -101,7 +89,6 @@ namespace RenathiaCrochet.Infrastructure.Data
           </td>
         </tr>
 
-        <!-- Totales -->
         <tr>
           <td style='padding:0 40px 28px;'>
             <table width='100%' cellpadding='0' cellspacing='0' style='font-size:14px;color:#555;'>
@@ -121,7 +108,6 @@ namespace RenathiaCrochet.Infrastructure.Data
           </td>
         </tr>
 
-        <!-- Entrega -->
         <tr>
           <td style='padding:0 40px 32px;'>
             <div style='background:#fdf0f7;border-left:4px solid #C96EA0;padding:14px 16px;border-radius:6px;font-size:14px;color:#555;'>
@@ -130,7 +116,6 @@ namespace RenathiaCrochet.Infrastructure.Data
           </td>
         </tr>
 
-        <!-- Pie -->
         <tr>
           <td style='background:#fdf6fa;padding:24px 40px;text-align:center;border-top:1px solid #f3e0ec;'>
             <p style='margin:0;font-size:13px;color:#aaa;'>
@@ -144,50 +129,102 @@ namespace RenathiaCrochet.Infrastructure.Data
     </td></tr>
   </table>
 </body>
-</html>"
-            };
+</html>";
 
-            await SendAsync(email);
+            await SendAsync(
+                to: clientEmail,
+                subject: $"¡Pedido confirmado! #{order.OrderId} - Renathia Crochet",
+                html: html);
         }
 
         /// <summary>
-        /// Envía un correo HTML al usuario con el enlace para restablecer su contraseña.
+        /// Envía el correo de recuperación de contraseña con el enlace de restablecimiento.
         /// El enlace expira en 30 minutos (responsabilidad del flujo que lo genera).
-        /// Usa StartTLS para la conexión segura con el servidor SMTP.
         /// </summary>
         public async Task SendPasswordRecoveryEmailAsync(string toEmail, string resetLink)
         {
-            var email = new MimeMessage();
-            email.From.Add(MailboxAddress.Parse(_configuration["SMTP_USER"]));
-            email.To.Add(MailboxAddress.Parse(toEmail));
-            email.Subject = "Recuperación de contraseña - RENATHIA CROCHET";
+            var html = $@"
+<!DOCTYPE html>
+<html lang='es'>
+<head><meta charset='UTF-8'></head>
+<body style='margin:0;padding:0;background:#fdf6fa;font-family:Georgia,serif;'>
+  <table width='100%' cellpadding='0' cellspacing='0' style='background:#fdf6fa;padding:32px 0;'>
+    <tr><td align='center'>
+      <table width='560' cellpadding='0' cellspacing='0' style='background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 2px 12px rgba(201,110,160,0.10);'>
 
-            email.Body = new TextPart("html")
-            {
-                Text = $@"
-                    <h2>Recuperación de contraseña</h2>
-                    <p>Hola, recibimos una solicitud para restablecer tu contraseña.</p>
-                    <p>Haz clic en el siguiente enlace para continuar:</p>
-                    <a href='{resetLink}'>Restablecer contraseña</a>
-                    <p>Este enlace expira en 30 minutos.</p>
-                    <p>Si no solicitaste esto, ignora este correo.</p>
-                    <br/>
-                    <p>RENATHIA CROCHET</p>"
-            };
+        <tr>
+          <td style='background:#C96EA0;padding:28px 40px;text-align:center;'>
+            <h1 style='margin:0;color:#ffffff;font-size:22px;letter-spacing:1px;'>Renathia Crochet</h1>
+          </td>
+        </tr>
 
-            await SendAsync(email);
+        <tr>
+          <td style='padding:36px 40px 28px;'>
+            <h2 style='color:#C96EA0;margin:0 0 12px;font-size:18px;'>Recuperación de contraseña</h2>
+            <p style='color:#555;margin:0 0 8px;font-size:15px;'>
+              Recibimos una solicitud para restablecer tu contraseña.
+              Haz clic en el botón para continuar:
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style='padding:0 40px 32px;text-align:center;'>
+            <a href='{resetLink}'
+               style='display:inline-block;background:#C96EA0;color:#ffffff;text-decoration:none;
+                      padding:14px 36px;border-radius:8px;font-size:15px;font-weight:bold;'>
+              Restablecer contraseña
+            </a>
+          </td>
+        </tr>
+
+        <tr>
+          <td style='padding:0 40px 32px;'>
+            <p style='color:#888;font-size:13px;margin:0;'>
+              Este enlace expira en <strong>30 minutos</strong>.<br/>
+              Si no solicitaste esto, ignora este correo — tu cuenta está segura.
+            </p>
+          </td>
+        </tr>
+
+        <tr>
+          <td style='background:#fdf6fa;padding:20px 40px;text-align:center;border-top:1px solid #f3e0ec;'>
+            <p style='margin:0;font-size:12px;color:#aaa;'>
+              <strong style='color:#C96EA0;'>Renathia Crochet</strong> — hecho con amor ✿
+            </p>
+          </td>
+        </tr>
+
+      </table>
+    </td></tr>
+  </table>
+</body>
+</html>";
+
+            await SendAsync(
+                to: toEmail,
+                subject: "Recuperación de contraseña - Renathia Crochet",
+                html: html);
         }
 
-        private async Task SendAsync(MimeMessage email)
+        private async Task SendAsync(string to, string subject, string html)
         {
-            using var smtp = new SmtpClient();
-            await smtp.ConnectAsync(_configuration["SMTP_HOST"],
-                int.Parse(_configuration["SMTP_PORT"]!),
-                SecureSocketOptions.StartTls);
-            await smtp.AuthenticateAsync(_configuration["SMTP_USER"],
-                _configuration["SMTP_PASS"]);
-            await smtp.SendAsync(email);
-            await smtp.DisconnectAsync(true);
+            var apiKey = _configuration["SENDGRID_API_KEY"];
+            var fromEmail = _configuration["SMTP_USER"]; // reutilizamos la variable del remitente
+
+            var client = new SendGridClient(apiKey);
+            var from = new EmailAddress(fromEmail, "Renathia Crochet");
+            var toAddress = new EmailAddress(to);
+            var msg = MailHelper.CreateSingleEmail(from, toAddress, subject, plainTextContent: null, html);
+
+            var response = await client.SendEmailAsync(msg);
+
+            if (!response.IsSuccessStatusCode)
+            {
+                var body = await response.Body.ReadAsStringAsync();
+                throw new InvalidOperationException(
+                    $"SendGrid error {(int)response.StatusCode}: {body}");
+            }
         }
     }
 }
