@@ -19,6 +19,12 @@ namespace RenathiaCrochet.Infrastructure.Data
         protected override void OnModelCreating(ModelBuilder modelBuilder)
         {
             modelBuilder.Entity<OrderTracking>().HasKey(ot => ot.TrackingId);
+
+            modelBuilder.Entity<Order>().ToTable(tb => tb.HasTrigger("tr_RegistrarCambioEstadoPedido"));
+            modelBuilder.Entity<Order>().ToTable(tb => tb.HasTrigger("tr_RegistrarPagoAlConfirmar"));
+            modelBuilder.Entity<OrderItem>().ToTable(tb => tb.HasTrigger("tr_DescontarStockAlInsertar"));
+            modelBuilder.Entity<OrderItem>().ToTable(tb => tb.HasTrigger("tr_ActualizarTotalOrden"));
+            modelBuilder.Entity<Product>().ToTable(tb => tb.HasTrigger("tr_InactivarProductoSinStock"));
         }
 
         public DbSet<User> Users { get; set; }
