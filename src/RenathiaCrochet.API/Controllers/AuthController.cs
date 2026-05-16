@@ -1,8 +1,10 @@
 using Microsoft.AspNetCore.Authorization;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 using RenathiaCrochet.Application;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
+using RenathiaCrochet.Infrastructure.Data;
 using System.Security.Claims;
 
 namespace RenathiaCrochet.API.Controllers
@@ -15,10 +17,12 @@ namespace RenathiaCrochet.API.Controllers
     public class AuthController : ControllerBase
     {
         private readonly AuthService _authService;
+        private readonly AppDbContext _context;
 
-        public AuthController(AuthService authService)
+        public AuthController(AuthService authService, AppDbContext context)
         {
             _authService = authService;
+            _context = context;
         }
 
         /// <summary>
@@ -99,6 +103,56 @@ namespace RenathiaCrochet.API.Controllers
             var result = await _authService.UpdateProfileAsync(userId, dto);
             if (!result.Success) return BadRequest(result);
             return Ok(result);
+        }
+
+        /// <summary>
+        /// Elimina permanentemente la cuenta del usuario autenticado (solo clientes, roleId = 2).
+        /// Elimina en orden: OrderTracking → OrderItems → Orders → User.
+        /// </summary>
+        [Authorize]
+        [HttpDelete("me")]
+        public async Task<IActionResult> DeleteMyAccount()
+        {
+            var userId = int.Parse(User.FindFirstValue(ClaimTypes.NameIdentifier)!);
+
+            var user = await _context.Users.FindAsync(userId);
+            if (user == null)
+                return NotFound(new AuthResponseDto { Success = false, Message = "Usuario no encontrado" });
+
+            if (user.RoleId != 2)
+                return StatusCode(403, new AuthResponseDto { Success = false, Message = "Solo los clientes pueden eliminar su cuenta desde esta opción" });
+
+            // Obtener todos los pedidos del usuario con sus hijos
+            var orders = await _context.Orders
+                .Where(o => o.UserId == userId)
+                .ToListAsync();
+
+            var orderIds = orders.Select(o => o.OrderId).ToList();
+
+            if (orderIds.Any())
+            {
+                // 1. Eliminar tracking
+                var tracking = await _context.OrderTracking
+                    .Where(t => orderIds.Contains(t.OrderId))
+                    .ToListAsync();
+                _context.OrderTracking.RemoveRange(tracking);
+
+                // 2. Eliminar items
+                var items = await _context.OrderItems
+                    .Where(i => orderIds.Contains(i.OrderId))
+                    .ToListAsync();
+                _context.OrderItems.RemoveRange(items);
+
+                // 3. Eliminar pedidos
+                _context.Orders.RemoveRange(orders);
+            }
+
+            // 4. Eliminar usuario
+            _context.Users.Remove(user);
+
+            await _context.SaveChangesAsync();
+
+            return Ok(new AuthResponseDto { Success = true, Message = "Cuenta eliminada exitosamente" });
         }
     }
 }
