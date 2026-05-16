@@ -1,4 +1,5 @@
-﻿using Microsoft.Extensions.Logging;
+﻿using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
@@ -15,13 +16,15 @@ namespace RenathiaCrochet.Application.Services
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
         private readonly ILogger<AuthService> _logger;
+        private readonly IConfiguration _configuration;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, ILogger<AuthService> logger)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, ILogger<AuthService> logger, IConfiguration configuration)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
             _emailService = emailService;
             _logger = logger;
+            _configuration = configuration;
         }
 
         /// <summary>
@@ -170,7 +173,8 @@ namespace RenathiaCrochet.Application.Services
             var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
 
-            var resetLink = $"https://renathia.com/reset-password?token={resetToken}&email={user.Email}";
+            var frontendUrl = _configuration["FRONTEND_URL"]?.TrimEnd('/') ?? "https://renathia.com";
+            var resetLink = $"{frontendUrl}/reset-password?token={resetToken}&email={user.Email}";
 
             _logger.LogInformation("2. Antes de llamar SendGrid");
             await _emailService.SendPasswordRecoveryEmailAsync(user.Email, resetLink);
