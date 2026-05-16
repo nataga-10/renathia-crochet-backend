@@ -4,7 +4,6 @@ using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Application.Services;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
-using RenathiaCrochet.Infrastructure.Data;
 
 namespace RenathiaCrochet.API.Controllers
 {
@@ -27,14 +26,14 @@ namespace RenathiaCrochet.API.Controllers
         private readonly WompiService _wompiService;
         private readonly IOrderRepository _orderRepository;
         private readonly IUserRepository _userRepository;
-        private readonly EmailService _emailService;
+        private readonly IEmailService _emailService;
         private readonly ILogger<PaymentsController> _logger;
 
         public PaymentsController(
             WompiService wompiService,
             IOrderRepository orderRepository,
             IUserRepository userRepository,
-            EmailService emailService,
+            IEmailService emailService,
             ILogger<PaymentsController> logger)
         {
             _wompiService = wompiService;

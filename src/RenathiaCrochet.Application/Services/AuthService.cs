@@ -12,11 +12,13 @@ namespace RenathiaCrochet.Application.Services
     {
         private readonly IUserRepository _userRepository;
         private readonly ITokenService _tokenService;
+        private readonly IEmailService _emailService;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
+            _emailService = emailService;
         }
 
         /// <summary>
@@ -164,7 +166,7 @@ namespace RenathiaCrochet.Application.Services
 
             var resetLink = $"https://renathia.com/reset-password?token={resetToken}&email={user.Email}";
 
-            // TODO: Enviar el correo con resetLink usando EmailService
+            await _emailService.SendPasswordRecoveryEmailAsync(user.Email, resetLink);
 
             return new AuthResponseDto
             {

@@ -6,14 +6,15 @@ using MailKit.Security;
 using Microsoft.Extensions.Configuration;
 using MimeKit;
 using RenathiaCrochet.Domain.Entities;
+using RenathiaCrochet.Domain.Interfaces;
 
 namespace RenathiaCrochet.Infrastructure.Data
 {
     /// <summary>
     /// Servicio de envío de correos mediante SMTP usando MailKit.
-    /// Requiere SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASSWORD en la configuración.
+    /// Requiere SMTP_HOST, SMTP_PORT, SMTP_USER y SMTP_PASS en la configuración.
     /// </summary>
-    public class EmailService
+    public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
 
@@ -184,7 +185,7 @@ namespace RenathiaCrochet.Infrastructure.Data
                 int.Parse(_configuration["SMTP_PORT"]!),
                 SecureSocketOptions.StartTls);
             await smtp.AuthenticateAsync(_configuration["SMTP_USER"],
-                _configuration["SMTP_PASSWORD"]);
+                _configuration["SMTP_PASS"]);
             await smtp.SendAsync(email);
             await smtp.DisconnectAsync(true);
         }

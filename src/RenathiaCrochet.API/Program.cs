@@ -52,7 +52,7 @@ builder.Services.AddScoped<IGalleryRepository, GalleryRepository>();
 // Servicios
 builder.Services.AddScoped<ITokenService, TokenService>();
 builder.Services.AddScoped<IBlobStorageService, BlobStorageService>();
-builder.Services.AddScoped<EmailService>();
+builder.Services.AddScoped<IEmailService, EmailService>();
 builder.Services.AddScoped<AuthService>();
 builder.Services.AddScoped<ProductService>();
 builder.Services.AddScoped<WompiService>();   // <-- maneja integridad y firma del webhook
