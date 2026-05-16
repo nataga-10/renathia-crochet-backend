@@ -2,7 +2,6 @@
 using System.Collections.Generic;
 using System.Text;
 using FluentAssertions;
-using Microsoft.Extensions.Configuration;
 using Microsoft.Extensions.Logging;
 using Moq;
 using RenathiaCrochet.Application.DTOs;
@@ -24,7 +23,7 @@ namespace RenathiaCrochet.Tests.Auth
             mockRepo.Setup(r => r.ExistsByEmailAsync(It.IsAny<string>()))
                     .ReturnsAsync(false);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>(), Mock.Of<IConfiguration>());
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>());
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto
@@ -51,7 +50,7 @@ namespace RenathiaCrochet.Tests.Auth
             mockRepo.Setup(r => r.ExistsByEmailAsync("test@correo.com"))
                     .ReturnsAsync(true);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>(), Mock.Of<IConfiguration>());
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>());
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto
@@ -77,7 +76,7 @@ namespace RenathiaCrochet.Tests.Auth
             mockRepo.Setup(r => r.ExistsByEmailAsync(It.IsAny<string>()))
                     .ReturnsAsync(false);
 
-            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>(), Mock.Of<IConfiguration>());
+            var service = new AuthService(mockRepo.Object, mockToken.Object, mockEmail.Object, Mock.Of<ILogger<AuthService>>());
 
             // Act
             var result = await service.RegisterAsync(new RegisterDto
