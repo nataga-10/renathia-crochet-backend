@@ -19,6 +19,11 @@ namespace RenathiaCrochet.Infrastructure.Data
             _context = context;
         }
 
+        public async Task<List<User>> GetAllAsync()
+        {
+            return await _context.Users.OrderBy(u => u.UserId).ToListAsync();
+        }
+
         public async Task<User?> GetByIdAsync(int userId)
         {
             return await _context.Users.FindAsync(userId);
@@ -47,6 +52,12 @@ namespace RenathiaCrochet.Infrastructure.Data
         public async Task UpdateAsync(User user)
         {
             _context.Users.Update(user);
+            await _context.SaveChangesAsync();
+        }
+
+        public async Task DeleteAsync(User user)
+        {
+            _context.Users.Remove(user);
             await _context.SaveChangesAsync();
         }
     }

@@ -10,6 +10,7 @@ namespace RenathiaCrochet.Application.DTOs
         public string? DocumentNumber { get; set; }
         public string? ProfileImageUrl { get; set; }
         public int RoleId { get; set; }
+        public bool IsActive { get; set; }
         public DateTime CreatedAt { get; set; }
     }
 
