@@ -152,6 +152,48 @@ namespace RenathiaCrochet.Application.Services
             return new AuthResponseDto { Success = true, Message = "Perfil actualizado exitosamente" };
         }
 
+        /// <summary>
+        /// Restablece la contraseña usando el token enviado por correo.
+        /// Valida que el token exista, coincida y no haya expirado.
+        /// </summary>
+        public async Task<AuthResponseDto> ResetPasswordAsync(ResetPasswordDto dto)
+        {
+            var user = await _userRepository.GetByEmailAsync(dto.Email);
+
+            if (user == null
+                || user.PasswordResetToken != dto.Token
+                || user.PasswordResetTokenExpiry == null
+                || user.PasswordResetTokenExpiry < DateTime.UtcNow)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "El enlace de restablecimiento no es válido o ha expirado"
+                };
+            }
+
+            if (dto.NewPassword.Length < 8)
+            {
+                return new AuthResponseDto
+                {
+                    Success = false,
+                    Message = "La contraseña debe tener mínimo 8 caracteres"
+                };
+            }
+
+            user.PasswordHash = BCrypt.Net.BCrypt.HashPassword(dto.NewPassword);
+            user.PasswordResetToken = null;
+            user.PasswordResetTokenExpiry = null;
+            user.UpdatedAt = DateTime.UtcNow;
+            await _userRepository.UpdateAsync(user);
+
+            return new AuthResponseDto
+            {
+                Success = true,
+                Message = "Contraseña restablecida exitosamente"
+            };
+        }
+
         public async Task<AuthResponseDto> RecoverPasswordAsync(RecoverPasswordDto dto)
         {
             var user = await _userRepository.GetByEmailAsync(dto.Email);
@@ -172,6 +214,11 @@ namespace RenathiaCrochet.Application.Services
             // Generar token URL-safe a partir de un GUID para el enlace de restablecimiento
             var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
+
+            // Persistir el token y su expiración (30 min) para poder verificarlo al resetear
+            user.PasswordResetToken = resetToken;
+            user.PasswordResetTokenExpiry = DateTime.UtcNow.AddMinutes(30);
+            await _userRepository.UpdateAsync(user);
 
             var frontendUrl = _configuration["FRONTEND_URL"]?.TrimEnd('/') ?? "https://renathia.com";
             var resetLink = $"{frontendUrl}/reset-password?token={resetToken}&email={user.Email}";

@@ -63,6 +63,19 @@ namespace RenathiaCrochet.API.Controllers
         }
 
         /// <summary>
+        /// Restablece la contraseña usando el token recibido por correo.
+        /// Retorna 400 si el token es inválido, expiró o la contraseña no cumple los requisitos.
+        /// </summary>
+        [HttpPost("reset-password")]
+        public async Task<IActionResult> ResetPassword([FromBody] ResetPasswordDto dto)
+        {
+            var result = await _authService.ResetPasswordAsync(dto);
+            if (!result.Success)
+                return BadRequest(result);
+            return Ok(result);
+        }
+
+        /// <summary>
         /// Retorna el perfil del usuario autenticado.
         /// </summary>
         [Authorize]

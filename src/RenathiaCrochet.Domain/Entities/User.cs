@@ -26,5 +26,9 @@ namespace RenathiaCrochet.Domain.Entities
         public bool IsActive { get; set; } = true;
         public DateTime CreatedAt { get; set; } = DateTime.UtcNow;
         public DateTime? UpdatedAt { get; set; }
+        /// <summary>Token URL-safe para restablecer contraseña. Null cuando no hay solicitud activa.</summary>
+        public string? PasswordResetToken { get; set; }
+        /// <summary>Fecha de expiración del token de restablecimiento (30 minutos desde su generación).</summary>
+        public DateTime? PasswordResetTokenExpiry { get; set; }
     }
 }
