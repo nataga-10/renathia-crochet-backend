@@ -1,4 +1,5 @@
-﻿using RenathiaCrochet.Application.DTOs;
+﻿using Microsoft.Extensions.Logging;
+using RenathiaCrochet.Application.DTOs;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
 
@@ -13,12 +14,14 @@ namespace RenathiaCrochet.Application.Services
         private readonly IUserRepository _userRepository;
         private readonly ITokenService _tokenService;
         private readonly IEmailService _emailService;
+        private readonly ILogger<AuthService> _logger;
 
-        public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService)
+        public AuthService(IUserRepository userRepository, ITokenService tokenService, IEmailService emailService, ILogger<AuthService> logger)
         {
             _userRepository = userRepository;
             _tokenService = tokenService;
             _emailService = emailService;
+            _logger = logger;
         }
 
         /// <summary>
@@ -153,6 +156,7 @@ namespace RenathiaCrochet.Application.Services
             // Retornar el mismo mensaje independientemente de si el correo existe o no
             if (user == null)
             {
+                _logger.LogInformation("RecoverPassword - correo no encontrado en BD: {Email}", dto.Email);
                 return new AuthResponseDto
                 {
                     Success = false,
@@ -160,13 +164,17 @@ namespace RenathiaCrochet.Application.Services
                 };
             }
 
+            _logger.LogInformation("1. Usuario encontrado: {Email}", user.Email);
+
             // Generar token URL-safe a partir de un GUID para el enlace de restablecimiento
             var resetToken = Convert.ToBase64String(Guid.NewGuid().ToByteArray())
                 .Replace("+", "-").Replace("/", "_").TrimEnd('=');
 
             var resetLink = $"https://renathia.com/reset-password?token={resetToken}&email={user.Email}";
 
+            _logger.LogInformation("2. Antes de llamar SendGrid");
             await _emailService.SendPasswordRecoveryEmailAsync(user.Email, resetLink);
+            _logger.LogInformation("3. SendGrid llamado exitosamente");
 
             return new AuthResponseDto
             {

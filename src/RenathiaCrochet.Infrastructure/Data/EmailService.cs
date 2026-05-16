@@ -1,5 +1,6 @@
 using System.Text;
 using Microsoft.Extensions.Configuration;
+using Microsoft.Extensions.Logging;
 using RenathiaCrochet.Domain.Entities;
 using RenathiaCrochet.Domain.Interfaces;
 using SendGrid;
@@ -15,10 +16,12 @@ namespace RenathiaCrochet.Infrastructure.Data
     public class EmailService : IEmailService
     {
         private readonly IConfiguration _configuration;
+        private readonly ILogger<EmailService> _logger;
 
-        public EmailService(IConfiguration configuration)
+        public EmailService(IConfiguration configuration, ILogger<EmailService> logger)
         {
             _configuration = configuration;
+            _logger = logger;
         }
 
         /// <summary>
@@ -212,12 +215,16 @@ namespace RenathiaCrochet.Infrastructure.Data
             var apiKey = _configuration["SENDGRID_API_KEY"];
             var fromEmail = _configuration["SMTP_USER"]; // reutilizamos la variable del remitente
 
+            _logger.LogInformation("SendGrid - enviando a {To} con key {Key}", to, apiKey?[..10]);
+
             var client = new SendGridClient(apiKey);
             var from = new EmailAddress(fromEmail, "Renathia Crochet");
             var toAddress = new EmailAddress(to);
             var msg = MailHelper.CreateSingleEmail(from, toAddress, subject, plainTextContent: null, html);
 
             var response = await client.SendEmailAsync(msg);
+
+            _logger.LogInformation("SendGrid - status: {Status}", response.StatusCode);
 
             if (!response.IsSuccessStatusCode)
             {
